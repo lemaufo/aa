@@ -1,13 +1,19 @@
 @php
     $usuario = auth()->user();
 
-    $enlaces = [
-        ['ruta' => 'inicio', 'patron' => 'inicio', 'texto' => 'Inicio', 'icono' => 'home'],
-        ['ruta' => 'pedidos.index', 'patron' => 'pedidos.*', 'texto' => 'Pedidos', 'icono' => 'clipboard-document-list'],
-    ];
+    if ($usuario->rol === \App\Enums\Rol::Consulta) {
+        $enlaces = [
+            ['ruta' => 'rastreo', 'patron' => 'rastreo', 'texto' => 'Rastreo', 'icono' => 'magnifying-glass'],
+        ];
+    } else {
+        $enlaces = [
+            ['ruta' => 'inicio', 'patron' => 'inicio', 'texto' => 'Inicio', 'icono' => 'home'],
+            ['ruta' => 'pedidos.index', 'patron' => 'pedidos.*', 'texto' => 'Pedidos', 'icono' => 'clipboard-document-list'],
+        ];
 
-    if ($usuario->rol === \App\Enums\Rol::Admin) {
-        $enlaces[] = ['ruta' => 'usuarios', 'patron' => 'usuarios', 'texto' => 'Usuarios y permisos', 'icono' => 'user-group'];
+        if ($usuario->rol === \App\Enums\Rol::Admin) {
+            $enlaces[] = ['ruta' => 'usuarios', 'patron' => 'usuarios', 'texto' => 'Usuarios y permisos', 'icono' => 'user-group'];
+        }
     }
 @endphp
 <!DOCTYPE html>

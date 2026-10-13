@@ -8,7 +8,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Volt\Component;
 
 /**
- * Panel genérico de "escanea la etiqueta": envío a CEDIS, recepción en sucursal y entrega en sucursal.
+ * Panel de "escanea la etiqueta": envío a CEDIS y recepción en sucursal.
  * Un lector de código de barras escribe el folio y manda Enter; en el celular se puede teclear.
  */
 new class extends Component {
@@ -36,17 +36,11 @@ new class extends Component {
                 'boton' => 'Confirmar envío a CEDIS',
                 'ok' => 'Pedido enviado a CEDIS.',
             ],
-            'recibir_sucursal' => [
+            default => [
                 'titulo' => 'Recibe el pedido en la sucursal',
                 'ayuda' => 'Escanea la etiqueta al bajar el pedido del transporte.',
                 'boton' => 'Confirmar recepción',
                 'ok' => 'Pedido recibido en la sucursal. Ya puedes entregarlo al cliente.',
-            ],
-            default => [
-                'titulo' => 'Entrega el pedido al cliente',
-                'ayuda' => 'Escanea la etiqueta en el momento de entregar.',
-                'boton' => 'Confirmar entrega al cliente',
-                'ok' => 'Pedido entregado. Falta cerrar la venta en Microsip.',
             ],
         };
     }
@@ -60,7 +54,7 @@ new class extends Component {
 
     public function confirmar(FlujoService $flujo): void
     {
-        $this->validate(['codigo' => ['required', 'string', 'max:60']]);
+        $this->validate(['codigo' => ['required', 'string', 'max:60']], [], ['codigo' => 'código de la etiqueta']);
 
         if (strcasecmp(trim($this->codigo), $this->pedido->folio) !== 0) {
             $this->addError('codigo', 'Ese código no es de este pedido. El folio es '.$this->pedido->folio.'.');

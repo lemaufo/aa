@@ -20,6 +20,8 @@ return new class extends Migration
             $table->decimal('peso_por_metro', 8, 3);      // kg por metro lineal, del catálogo del artículo
             $table->text('instrucciones')->nullable();    // lo que el cajero escribió en la descripción de Expertos
             $table->string('forma_entrega')->nullable();  // cedis | cliente | sucursal
+            $table->string('telefono')->nullable();         // teléfono del cliente, capturado en caja
+            $table->string('ubicacion_cedis')->nullable();  // rack o zona donde queda el material en CEDIS
             $table->json('cortes_solicitados')->nullable();
             $table->json('cortes_producidos')->nullable();
             $table->timestamp('captura_validada_at')->nullable();

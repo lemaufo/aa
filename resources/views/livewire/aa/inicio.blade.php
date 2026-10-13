@@ -12,7 +12,7 @@ new #[Title('Inicio')] class extends Component {
     #[Computed]
     public function visibles()
     {
-        return Pedido::visiblePara(auth()->user())->get();
+        return Pedido::visiblePara(auth()->user())->prioritarios()->get();
     }
 
     #[Computed]
@@ -22,7 +22,6 @@ new #[Title('Inicio')] class extends Component {
 
         return $this->visibles
             ->filter(fn (Pedido $p) => Flujo::panelPara($usuario, $p) !== null)
-            ->sortBy('updated_at')
             ->values();
     }
 
@@ -56,14 +55,16 @@ new #[Title('Inicio')] class extends Component {
     {
         $hora = now()->hour;
 
-        return $hora < 12 ? 'Buen día' : ($hora < 19 ? 'Buenas tardes' : 'Buenas noches');
+        return $hora < 12 ? 'Buenos días' : ($hora < 19 ? 'Buenas tardes' : 'Buenas noches');
     }
 }; ?>
 
 <div class="grid gap-8">
     <header class="grid gap-1.5">
-        <h1 class="font-display text-[42px] font-semibold leading-none sm:text-5xl">
-            {{ $this->saludo() }}, {{ \Illuminate\Support\Str::of(auth()->user()->name)->before(' ') }}
+        <h1 class="font-display text-[42px] font-semibold leading-none sm:text-5xl"
+            x-data="{ saludo: @js($this->saludo()) }"
+            x-init="saludo = ((h) => h < 12 ? 'Buenos días' : (h < 19 ? 'Buenas tardes' : 'Buenas noches'))(new Date().getHours())">
+            <span x-text="saludo">{{ $this->saludo() }}</span>, {{ \Illuminate\Support\Str::of(auth()->user()->name)->before(' ') }}
         </h1>
         <p class="max-w-prose text-acero">{{ auth()->user()->rol->resumen() }}</p>
     </header>
@@ -111,6 +112,7 @@ new #[Title('Inicio')] class extends Component {
                             </span>
                             <span class="flex items-center justify-between gap-3 sm:justify-end">
                                 <x-aa.badge :estatus="$p->estatus" />
+                                <x-aa.prioridad :pedido="$p" /> 
                                 <span class="btn btn-primario min-h-10 px-4">Atender</span>
                             </span>
                             <x-aa.regla :estatus="$p->estatus" compacta class="sm:col-span-full" />

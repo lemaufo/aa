@@ -19,7 +19,7 @@ new #[Title('Pedidos')] class extends Component {
     #[Computed]
     public function base()
     {
-        return Pedido::visiblePara(auth()->user())->latest('updated_at')->get();
+        return Pedido::visiblePara(auth()->user())->prioritarios()->get();
     }
 
     private function coincide(Pedido $p, string $filtro): bool
@@ -103,6 +103,7 @@ new #[Title('Pedidos')] class extends Component {
                         </span>
                         <span class="flex items-center sm:justify-end">
                             <x-aa.badge :estatus="$p->estatus" />
+                            <x-aa.prioridad :pedido="$p" />
                         </span>
                         <x-aa.regla :estatus="$p->estatus" compacta class="sm:col-span-full" />
                     </a>

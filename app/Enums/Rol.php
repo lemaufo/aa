@@ -29,9 +29,9 @@ enum Rol: string
         return match ($this) {
             self::Admin => 'Puedes operar cualquier paso del flujo y revisar permisos.',
             self::Cajero => 'Ligas cada traspaso con su venta cobrada y capturas los datos del pedido.',
-            self::Produccion => 'Capturas lo que se cortó, imprimes la etiqueta, subes la evidencia y despachas a CEDIS.',
+            self::Produccion => 'Imprimes la etiqueta, pesas, subes las fotos de evidencia y despachas a CEDIS.',
             self::Cedis => 'Recibes, pesas, validas y entregas, ya sea en CEDIS, con repartidor o hacia sucursal.',
-            self::Sucursal => 'Recibes el pedido, lo entregas al cliente y cierras la venta en Microsip.',
+            self::Sucursal => 'Recibes el pedido y lo entregas al cliente con acuse firmado; la venta se actualiza sola.',
             self::Consulta => 'Consultas el estatus y la bitácora de cualquier pedido. No modificas nada.',
         };
     }

@@ -1,66 +1,120 @@
+@php
+    $maximo = (int) config('aa.max_medidas', 11);
+    $renglones = collect($pedido->cortes_solicitados ?? [])->take($maximo)->values();
+    $n = $renglones->count();
+    // Hasta 7 renglones, letra cómoda; de 8 a 11, letra compacta para que todo quepa sin ocultar nada.
+    $denso = $n > 7;
+    $totalMetros = $renglones->sum(fn ($c) => $c['piezas'] * $c['medida']);
+    $elaboro = $pedido->elaboro() ?? auth()->user()->name;
+@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="es">
 <head>
-    @include('partials.head', ['title' => 'Etiqueta '.$pedido->folio])
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Etiqueta {{ $pedido->folio }}</title>
     <style>
         @page { size: 100mm 150mm; margin: 0; }
-        body { background: #d9dcdf; }
-        .hoja {
-            width: 100mm; height: 150mm; margin: 0 auto; background: #fff;
-            padding: 6mm; display: flex; flex-direction: column; gap: 3.5mm;
-            box-sizing: border-box; border: 1px solid #b4b9bd;
-        }
-        #qr svg { width: 34mm; height: 34mm; display: block; }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; background: #e5e7eb; font-family: "Source Sans 3", Arial, sans-serif; color: #111; }
+        .barra { display: flex; gap: 8px; justify-content: center; padding: 12px; }
+        .barra button { font: 600 15px Arial, sans-serif; padding: 8px 16px; border: 0; border-radius: 6px; background: #f97316; color: #fff; cursor: pointer; }
+        .etiqueta { width: 100mm; height: 150mm; margin: 0 auto 24px; padding: 4mm; background: #fff; display: flex; flex-direction: column; gap: 2mm; overflow: hidden; border: 1px solid #111; }
+        .marca { display: flex; justify-content: space-between; align-items: center; gap: 3mm; border-bottom: 2px solid #111; padding-bottom: 1mm; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+        .marca img { height: 14mm; width: auto; max-width: 56mm; display: block; }
+        .denso .marca img { height: 11mm; }
+        .folio { font-family: "Barlow Condensed", Arial Narrow, Arial, sans-serif; font-weight: 700; font-size: 40px; line-height: 1; letter-spacing: .02em; }
+        .codigo { display: flex; align-items: center; justify-content: space-between; gap: 3mm; }
+        .codigo svg { height: 16mm; max-width: 52mm; }
+        .cliente { font-size: 15px; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
+        .dato { font-size: 11px; line-height: 1.2; }
+        .dato b { font-weight: 700; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { border: 1px solid #111; padding: 1px 4px; text-align: right; line-height: 1.15; }
+        th { background: #eee; font-size: 10px; text-transform: uppercase; }
+        td:first-child, th:first-child { text-align: center; }
+        tfoot td { font-weight: 700; background: #f3f3f3; }
+        .denso table { font-size: 11px; }
+        .denso th { font-size: 9px; }
+        .denso td, .denso th { padding-top: 0; padding-bottom: 0; }
+        .denso .cliente { font-size: 13px; }
+        .denso .folio { font-size: 34px; }
+        .notas { font-size: 10px; line-height: 1.2; overflow-wrap: anywhere; }
+        .pie { margin-top: auto; display: flex; justify-content: space-between; gap: 3mm; border-top: 1px solid #111; padding-top: 1mm; font-size: 10px; }
         @media print {
-            body { background: #fff; }
-            .hoja { border: 0; margin: 0; }
-            .no-imprimir { display: none !important; }
+            html, body { background: #fff; }
+            .barra { display: none; }
+            .etiqueta { margin: 0; border: 0; }
         }
     </style>
 </head>
 <body>
-    <div class="no-imprimir mx-auto flex max-w-[100mm] flex-wrap items-center justify-between gap-3 px-1 py-4">
-        <a href="{{ route('pedidos.show', $pedido) }}" class="btn btn-secundario min-h-10">Volver al pedido</a>
-        <button type="button" onclick="window.print()" class="btn btn-primario min-h-10">
-            <x-aa.icon name="printer" /> Imprimir etiqueta
-        </button>
+    <div class="barra">
+        <button type="button" onclick="window.print()">Imprimir</button>
     </div>
 
-    <article class="hoja" aria-label="Etiqueta del pedido {{ $pedido->folio }}">
-        <img src="{{ asset('img/logo.png') }}" alt="Aceros el Águila" style="width: 46mm">
-
-        <div style="border-top: 0.6mm solid #25272a; padding-top: 2.5mm;">
-            <p style="font-size: 3.2mm; color: #606060;">Folio del traspaso</p>
-            <p class="folio" style="font-size: 17mm; line-height: 1;">{{ $pedido->folio }}</p>
+    <main class="etiqueta {{ $denso ? 'denso' : '' }}" id="etiqueta">
+        <div class="marca">
+            {{-- El logo se toma de public/ (config aa.logo). Si el archivo no existe, se muestra el nombre en texto. --}}
+            <img src="{{ asset(config('aa.logo', 'img/logo-aa.png')) }}" alt="Aceros el Águila"
+                 onerror="this.replaceWith(document.createTextNode('Aceros el Águila'))">
+            <span>Orden de producción</span>
         </div>
 
-        <div>
-            <p style="font-size: 5.2mm; font-weight: 700; line-height: 1.15;">{{ $pedido->cliente }}</p>
-            <p style="font-size: 3.8mm; color: #606060;">{{ $pedido->material }}</p>
+        <div class="codigo">
+            <span class="folio">{{ $pedido->folio }}</span>
+            <svg id="codigo-barras" data-folio="{{ $pedido->folio }}" aria-label="Código de barras {{ $pedido->folio }}"></svg>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 4mm; font-size: 3.8mm;">
-            <div><p style="font-size: 3.1mm; color: #606060;">Metros</p><p class="folio" style="font-size: 7mm;">{{ number_format($pedido->metros_traspaso, 2) }} m</p></div>
-            <div><p style="font-size: 3.1mm; color: #606060;">Peso teórico</p><p class="folio" style="font-size: 7mm;">{{ number_format($pedido->peso_teorico ?? $pedido->pesoTeorico(), 2) }} kg</p></div>
-            <div style="grid-column: 1 / -1;"><p style="font-size: 3.1mm; color: #606060;">Entrega</p><p style="font-weight: 600;">{{ $pedido->forma_entrega?->label() ?? 'Por definir' }}, {{ $pedido->sucursal }}</p></div>
-        </div>
+        <div class="cliente">{{ $pedido->cliente }}</div>
+        <div class="dato"><b>{{ $pedido->material }}</b></div>
 
-        <div style="margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 4mm;">
-            <p style="font-size: 3.2mm; color: #606060; max-width: 52mm;">
-                Escanea el código para recibir, enviar o entregar este pedido.<br>
-                Impreso {{ now()->translatedFormat('j M Y, H:i') }}
-            </p>
-            <div id="qr" aria-label="Código QR con el folio {{ $pedido->folio }}"></div>
-        </div>
-    </article>
+        <table>
+            <thead>
+                <tr><th>Pzas</th><th>Largo (m)</th><th>Subtotal (m)</th></tr>
+            </thead>
+            <tbody>
+                @foreach ($renglones as $c)
+                    <tr>
+                        <td>{{ $c['piezas'] }}</td>
+                        <td>{{ number_format($c['medida'], 2) }}</td>
+                        <td>{{ number_format($c['piezas'] * $c['medida'], 2) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+            <tfoot>
+                <tr><td>{{ $pedido->totalPiezas() }}</td><td>Total</td><td>{{ number_format($totalMetros, 2) }}</td></tr>
+            </tfoot>
+        </table>
 
+        <div class="dato">
+            <b>Peso teórico:</b> {{ number_format($pedido->pesoTeorico(), 2) }} kg
+            @if ($pedido->fecha_prometida)
+                &nbsp;·&nbsp; <b>Entrega:</b> {{ $pedido->fecha_prometida->format('d/m/Y') }}
+            @endif
+        </div>
+        <div class="dato">
+            <b>Destino:</b> {{ $pedido->forma_entrega?->label() ?? 'Sin definir' }} · {{ $pedido->sucursal }}
+        </div>
+        @if ($pedido->instrucciones)
+            <div class="notas"><b>Notas:</b> {{ $pedido->instrucciones }}</div>
+        @endif
+
+        <div class="pie">
+            <span>Elaboró: {{ $elaboro }}</span>
+            <span>Autorizó: {{ $pedido->autorizo() ?? '—' }}</span>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <script>
-        window.addEventListener('load', function () {
-            if (window.QRCode) {
-                QRCode.toString(@js($pedido->folio), { type: 'svg', margin: 0, errorCorrectionLevel: 'M' })
-                    .then(function (svg) { document.getElementById('qr').innerHTML = svg; });
+        (function () {
+            var svg = document.getElementById('codigo-barras');
+            if (window.JsBarcode && svg) {
+                JsBarcode(svg, svg.dataset.folio, { format: 'CODE128', displayValue: false, margin: 0, height: 60, width: 2 });
             }
-        });
+            if (location.search.indexOf('auto=1') !== -1) { setTimeout(function () { window.print(); }, 400); }
+        })();
     </script>
 </body>
 </html>

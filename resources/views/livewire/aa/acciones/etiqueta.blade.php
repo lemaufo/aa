@@ -64,7 +64,7 @@ new class extends Component {
 
         <div class="grid gap-2">
             <p class="text-[15px] font-semibold">1. Imprime la etiqueta</p>
-            <p class="text-[15px] text-acero">Es una etiqueta por pedido, con el folio del traspaso y un código QR.</p>
+            <p class="text-[15px] text-acero">Es una etiqueta por pedido, con el folio del traspaso, las piezas y su código de barras.</p>
             <div class="flex flex-wrap items-center gap-3">
                 <a href="{{ route('pedidos.etiqueta', $pedido) }}" target="_blank" rel="noopener"
                    x-on:click="$wire.impresa = true" class="btn btn-secundario">

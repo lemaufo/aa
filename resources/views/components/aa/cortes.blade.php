@@ -35,9 +35,12 @@
         @endforeach
     </div>
 
-    <button type="button" wire:click="agregarCorte" class="btn btn-secundario w-fit">
-        <x-aa.icon name="plus" /> Agregar otra medida
-    </button>
+        <div class="flex flex-wrap items-center gap-3">
+            <button type="button" wire:click="agregarCorte" class="btn btn-secundario w-fit" @disabled(count($cortes) >= config('aa.max_medidas', 11))>
+                <x-aa.icon name="plus" /> Agregar otra medida
+            </button>
+            <span class="text-[15px] text-acero">{{ count($cortes) }} de {{ config('aa.max_medidas', 11) }} medidas posibles en la etiqueta</span>
+        </div>
 
     <div @class([
         'rounded-md border px-4 py-3',

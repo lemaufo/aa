@@ -9,10 +9,41 @@ return [
     'demo' => (bool) env('AA_DEMO', true),
 
     /*
-    | Tolerancia, en %, entre el peso real (báscula de CEDIS) y el peso teórico.
-    | Valor provisional: lo define Aceros el Águila.
+    | De dónde salen los tickets de venta y los traspasos:
+    |   demo     = tablas demo_ventas y demo_traspasos en MySQL (prototipo)
+    |   firebird = Microsip / AdminExpertos (se conecta en la fase de integración)
     */
-    'tolerancia_peso' => (float) env('AA_TOLERANCIA_PESO', 2.0),
+    'origen' => env('AA_ORIGEN', 'demo'),
+
+    /* Solo demo: simula que Microsip no responde al marcar la venta como entregada. */
+    'demo_falla_microsip' => (bool) env('AA_DEMO_FALLA_MICROSIP', false),
+
+    /*
+    | Tolerancia, en %, entre el peso medido (báscula de producción) y el peso teórico.
+    | Acordado en la reunión: 5 % hacia arriba o hacia abajo.
+    */
+    'tolerancia_peso' => (float) env('AA_TOLERANCIA_PESO', 5.0),
+
+    /* Máximo de renglones (medidas distintas) que caben en la etiqueta sin ocultar información. */
+    'max_medidas' => 11,
+
+    /* Política: el pedido especial se vende en un ticket independiente, sin productos de línea. */
+    'ticket_exclusivo' => (bool) env('AA_TICKET_EXCLUSIVO', true),
+
+    /* Fotos y acuses se borran solos pasado este tiempo (comando aa:purgar-evidencias). */
+    'retencion_fotos_anios' => (int) env('AA_RETENCION_FOTOS_ANIOS', 2),
+
+    /*
+    | Dispositivos autorizados. Apagado por defecto para no estorbar en el desarrollo;
+    | en producción: AA_DISPOSITIVOS=true. El rol Consulta queda exento.
+    */
+    'dispositivos' => [
+        'activo' => (bool) env('AA_DISPOSITIVOS', false),
+        'cookie' => 'aa_dispositivo',
+        'codigo_vigencia_horas' => 24,
+    ],
+
+    'logo' => env('AA_LOGO', 'img/logo.png'),
 
     'sucursales' => ['Sucursal Centro', 'Sucursal Norte'],
 

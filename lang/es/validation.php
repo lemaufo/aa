@@ -28,6 +28,7 @@ return [
     'url' => ':Attribute debe ser un enlace completo, por ejemplo https://maps.google.com/...',
 
     'custom' => [],
+    'regex' => ':Attribute no tiene un formato válido.',
 
     'attributes' => [
         'username' => 'el usuario',
@@ -35,6 +36,8 @@ return [
         'folio_venta' => 'el folio de venta',
         'cliente' => 'el cliente',
         'forma_entrega' => 'la forma de entrega',
+        'telefono' => 'el teléfono',
+        'ubicacion_cedis' => 'la ubicación en CEDIS',
         'cortes' => 'las piezas',
         'cortes.*.piezas' => 'las piezas',
         'cortes.*.medida' => 'la medida',

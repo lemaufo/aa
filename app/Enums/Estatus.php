@@ -64,6 +64,24 @@ enum Estatus: string
         };
     }
 
+        /** Cómo se llama este estatus para el cliente que rastrea su pedido. */
+    public function tituloPublico(): string
+    {
+        return match ($this) {
+            self::EnExpertos => 'Traspaso registrado',
+            self::Cobrado => 'Pedido realizado',
+            self::Producido => 'Producido',
+            self::EnviadoACedis => 'Sale de producción hacia CEDIS',
+            self::Validado => 'Recibido y validado en CEDIS',
+            self::EnCedis => 'Listo para recoger en CEDIS',
+            self::EnviadoACliente => 'Sale hacia tu domicilio',
+            self::EnviadoASucursal => 'Sale hacia la sucursal',
+            self::EnSucursal => 'Llegó a la sucursal',
+            self::Entregado => 'Entregado',
+            self::Cancelado => 'Cancelado',
+        };
+    }
+
     public function esFinal(): bool
     {
         return in_array($this, [self::Entregado, self::Cancelado], true);
