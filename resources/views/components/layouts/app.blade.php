@@ -13,6 +13,7 @@
 
         if ($usuario->rol === \App\Enums\Rol::Admin) {
             $enlaces[] = ['ruta' => 'usuarios', 'patron' => 'usuarios', 'texto' => 'Usuarios y permisos', 'icono' => 'user-group'];
+            $enlaces[] = ['ruta' => 'articulos', 'patron' => 'articulos', 'texto' => 'Artículos', 'icono' => 'cube'];
         }
     }
 @endphp

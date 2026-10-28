@@ -149,6 +149,14 @@ class Pedido extends Model
             .($this->folio_venta ? ' '.$this->folio_venta : '').'.';
     }
 
+    /** Mensaje para avisar al cliente que su pedido ya llegó a su sucursal. */
+    public function mensajeListoEnSucursal(): string
+    {
+        return 'Hola, te escribimos de Aceros el Águila. Tu pedido '.$this->folio
+            .' ya está listo para recoger en '.$this->sucursal.'. Lleva una identificación o tu ticket de venta'
+            .($this->folio_venta ? ' '.$this->folio_venta : '').'.';
+    }
+
     /** Quién elaboró: el usuario de producción que imprimió la etiqueta (orden de producción). */
     public function elaboro(): ?string
     {

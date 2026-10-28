@@ -48,6 +48,9 @@ Route::middleware('auth')->group(function () {
 
             Volt::route('usuarios', 'aa.usuarios')->name('usuarios');
 
+            // Catálogo de artículos de Microsip, solo lectura (solo administrador: la propia pantalla lo verifica).
+            Volt::route('articulos', 'aa.articulos')->name('articulos');
+
             // Equipos autorizados (solo administrador: la propia pantalla lo verifica).
             Volt::route('dispositivos', 'aa.dispositivos')->name('dispositivos');
         });

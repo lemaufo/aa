@@ -32,6 +32,12 @@ class PedidoSeeder extends Seeder
 
     public function run(): void
     {
+        if (app()->isProduction()) {
+            $this->command?->warn('PedidoSeeder no corre en producción (pedidos demo).');
+
+            return;
+        }
+
         $usuarios = User::pluck('id', 'username');
 
         $this->ticketsDeMostrador();

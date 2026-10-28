@@ -66,6 +66,19 @@ new class extends Component {
     </div>
 
     <form wire:submit="entregar" class="grid gap-5 px-5 py-5">
+        @php($avisoWhatsApp = $pedido->urlWhatsApp($pedido->mensajeListoEnSucursal()))
+
+        <div class="flex flex-wrap items-center gap-3">
+            @if ($avisoWhatsApp)
+                <a href="{{ $avisoWhatsApp }}" target="_blank" rel="noopener" class="btn btn-secundario">
+                    <x-aa.icon name="chat-bubble-left-ellipsis" /> Avisar al cliente por WhatsApp
+                </a>
+                <span class="text-[15px] text-acero">Abre WhatsApp con el mensaje ya escrito. Tú decides si lo envías.</span>
+            @else
+                <span class="text-[15px] text-acero">Este pedido no tiene un teléfono válido para avisar por WhatsApp.</span>
+            @endif
+        </div>
+
         <p class="text-acero">Escanea la etiqueta, escribe quién recibe y sube la foto del acuse firmado.</p>
 
         <x-aa.campo label="Código de la etiqueta" for="codigo" :error="$errors->first('codigo')">

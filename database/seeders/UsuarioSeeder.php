@@ -9,6 +9,13 @@ class UsuarioSeeder extends Seeder
 {
     public function run(): void
     {
+        // Usuarios de prueba con contraseñas conocidas: nunca en producción.
+        if (app()->isProduction()) {
+            $this->command?->warn('UsuarioSeeder no corre en producción (usuarios de prueba).');
+
+            return;
+        }
+
         foreach (config('aa.usuarios') as $datos) {
             User::updateOrCreate(
                 ['username' => $datos['username']],
