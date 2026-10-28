@@ -41,7 +41,61 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/** Usuario con un rol. Cajero y Sucursal quedan en 'Sucursal Centro' salvo que se indique otra. */
+function usuario(App\Enums\Rol $rol, ?string $sucursal = null): App\Models\User
 {
-    // ..
+    static $n = 0;
+    $n++;
+
+    return App\Models\User::create([
+        'name' => $rol->label().' '.$n,
+        'username' => $rol->value.$n,
+        'email' => $rol->value.$n.'@prueba.test',
+        'rol' => $rol,
+        'sucursal' => $sucursal ?? ($rol->limitadoASuSucursal() ? 'Sucursal Centro' : null),
+        'password' => 'secreto123',
+    ]);
+}
+
+/**
+ * Pedido listo para el estatus pedido: 10 piezas de 6 m de un artículo de 3.45 kg/m (teórico 207 kg).
+ * Desde COBRADO ya trae ticket V-1 ligado y su venta demo cobrada.
+ */
+function pedido(App\Enums\Estatus $estatus = App\Enums\Estatus::EnExpertos, array $extra = []): App\Models\Pedido
+{
+    static $n = 0;
+    $n++;
+
+    $base = [
+        'folio' => 'TSA'.str_pad((string) $n, 6, '0', STR_PAD_LEFT),
+        'estatus' => $estatus,
+        'sucursal' => 'Sucursal Centro',
+        'cliente' => 'Cliente de prueba',
+        'material' => 'Lámina acanalada cal. 26',
+        'metros_traspaso' => 60,
+        'peso_por_metro' => 3.45,
+    ];
+
+    if ($estatus !== App\Enums\Estatus::EnExpertos && $estatus !== App\Enums\Estatus::Cancelado) {
+        $base += [
+            'folio_venta' => 'V-'.$n,
+            'ticket_validado_at' => now(),
+            'forma_entrega' => App\Enums\FormaEntrega::Cedis,
+            'fecha_prometida' => now()->addDays(2)->toDateString(),
+            'cortes_solicitados' => [['piezas' => 10, 'medida' => 6]],
+            'telefono' => '9611234567',
+        ];
+        venta('V-'.$n);
+    }
+
+    return App\Models\Pedido::create(array_merge($base, $extra));
+}
+
+/** Ticket en la tabla demo de Microsip. */
+function venta(string $folio, string $estado = 'pagada', string $articulo = 'Lámina acanalada cal. 26', int $ajenas = 0): void
+{
+    Illuminate\Support\Facades\DB::table('demo_ventas')->updateOrInsert(['folio' => $folio], [
+        'estado' => $estado, 'articulo' => $articulo, 'lineas_ajenas' => $ajenas,
+        'entregada' => false, 'created_at' => now(), 'updated_at' => now(),
+    ]);
 }
