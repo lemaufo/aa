@@ -16,7 +16,8 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    // Base propia de la app (pedidos, bitácora, usuarios, equipos). Microsip se lee por la conexión 'firebird'.
+    'default' => env('DB_CONNECTION', 'mysql'),
 
     /*
     |--------------------------------------------------------------------------
@@ -47,7 +48,7 @@ return [
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
+            'database' => env('DB_DATABASE', 'aa'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
@@ -112,6 +113,22 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        /*
+        | Microsip / AdminExpertos. Funciona igual con Firebird 3, 4 o 5: solo cambia el servidor,
+        | la app habla por fbclient.dll. DB_FIREBIRD_DATABASE acepta la ruta del .FDB en el servidor
+        | (C:/Microsip datos/ACEROS EL AGUILA.FDB) o un alias de databases.conf. Nunca la de producción.
+        */
+        'firebird' => [
+            'driver' => 'firebird',
+            'host' => env('DB_FIREBIRD_HOST', '127.0.0.1'),
+            'port' => env('DB_FIREBIRD_PORT', '3050'),
+            'database' => env('DB_FIREBIRD_DATABASE', 'C:/Microsip datos/ACEROS EL AGUILA.FDB'),
+            'username' => env('DB_FIREBIRD_USERNAME', 'SYSDBA'),
+            'password' => env('DB_FIREBIRD_PASSWORD', 'masterkey'),
+            'charset' => env('DB_FIREBIRD_CHARSET', 'UTF8'),
+            'role' => env('DB_FIREBIRD_ROLE'),
+            'prefix' => '',
+        ],
     ],
 
     /*

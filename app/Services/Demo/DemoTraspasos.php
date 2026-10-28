@@ -11,4 +11,10 @@ class DemoTraspasos implements TraspasosExpertos
     {
         return (bool) DB::table('demo_traspasos')->where('folio', $folio)->value('cancelado');
     }
+
+    /** En demo los pedidos ya vienen del seeder; no hay traspasos que dar de alta. */
+    public function leer(string $folio): ?array
+    {
+        return null;
+    }
 }

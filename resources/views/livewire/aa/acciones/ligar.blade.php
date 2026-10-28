@@ -96,7 +96,10 @@ new class extends Component {
             return;
         }
 
-        $venta = trim($this->folio_venta);
+        // Con Microsip se guarda el folio oficial (TBA074886) aunque se haya tecleado corto (tba74886).
+        $venta = config('aa.origen') === 'firebird'
+            ? \App\Services\Firebird\Microsip::folio($this->folio_venta)
+            : trim($this->folio_venta);
         $domicilio = $this->aDomicilio();
 
         try {

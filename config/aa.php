@@ -11,9 +11,9 @@ return [
     /*
     | De dónde salen los tickets de venta y los traspasos:
     |   demo     = tablas demo_ventas y demo_traspasos en MySQL (prototipo)
-    |   firebird = Microsip / AdminExpertos (se conecta en la fase de integración)
+    |   firebird = Microsip / AdminExpertos (conexión firebird de config/database.php)
     */
-    'origen' => env('AA_ORIGEN', 'demo'),
+    'origen' => env('AA_ORIGEN', 'firebird'),
 
     /* Solo demo: simula que Microsip no responde al marcar la venta como entregada. */
     'demo_falla_microsip' => (bool) env('AA_DEMO_FALLA_MICROSIP', false),

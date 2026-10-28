@@ -59,7 +59,8 @@ class ValidadorTicket
             $errores[] = 'El ticket trae productos de línea. El pedido especial debe venderse en un ticket independiente.';
         }
 
-        $usado = Pedido::query()->where('folio_venta', $folio)->whereKeyNot($pedido->getKey())->first();
+        // Microsip devuelve el folio completo (CA0078212) aunque se haya tecleado corto (ca78212).
+        $usado = Pedido::query()->whereIn('folio_venta', array_unique([$folio, $ticket['folio']]))->whereKeyNot($pedido->getKey())->first();
         if ($usado) {
             $errores[] = "El ticket {$folio} ya está ligado al traspaso {$usado->folio}.";
         }
