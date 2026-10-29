@@ -15,6 +15,20 @@ return [
     */
     'origen' => env('AA_ORIGEN', 'firebird'),
 
+    /*
+    | Conceptos de Microsip Inventarios (CONCEPTOS_IN.CONCEPTO_IN_ID) que cuentan como traspaso cuando el folio
+    | no está en AdminExpertos. 223048 = TRASPASO DE SALIDA. Varios separados por coma; vacío = solo Expertos.
+    */
+    'conceptos_traspaso' => array_filter(array_map('trim', explode(',', (string) env('AA_CONCEPTOS_TRASPASO', '223048')))),
+
+    /*
+    | Los traspasos capturados directo en Microsip con esos conceptos entran solos como pedido EN EXPERTOS
+    | (comando aa:importar-traspasos, cada minuto y al abrir Inicio). Solo los de esta fecha en adelante.
+    | No traen sucursal destino: se asignan a esta, que debe llamarse igual que la del cajero.
+    */
+    'traspasos_desde' => env('AA_TRASPASOS_DESDE', '2026-10-28'),
+    'sucursal_traspasos_microsip' => env('AA_SUCURSAL_TRASPASOS_MICROSIP', 'PASO DEL TORO'),
+
     /* Solo demo: simula que Microsip no responde al marcar la venta como entregada. */
     'demo_falla_microsip' => (bool) env('AA_DEMO_FALLA_MICROSIP', false),
 
@@ -45,7 +59,14 @@ return [
 
     'logo' => env('AA_LOGO', 'img/logo.png'),
 
+    /* Solo demo (o si Microsip no responde): con Microsip, las sucursales son sus almacenes. */
     'sucursales' => ['Sucursal Centro', 'Sucursal Norte'],
+
+    /*
+    | Almacenes de Microsip que no son sucursal y no se ofrecen al asignar usuarios (ALMACENES.ALMACEN_ID):
+    | 19 CEDIS, 105674 materia prima, 105675 producción, 221759 tránsito, 238791 mercancía en tránsito.
+    */
+    'almacenes_no_sucursal' => array_filter(array_map('trim', explode(',', (string) env('AA_ALMACENES_NO_SUCURSAL', '19,105674,105675,221759,238791')))),
 
     /*
     | Usuarios de prueba (se crean con el seeder). El acceso es por nombre de usuario, no por correo.

@@ -34,11 +34,11 @@ new #[Title('Usuarios y permisos')] class extends Component {
         return User::orderBy('id')->get();
     }
 
-    /** Las de configuración más las que ya usan pedidos y usuarios (con Microsip, los destinos de Expertos). */
+    /** Los almacenes de Microsip (en demo, las de configuración) más las que ya usan pedidos y usuarios. */
     #[Computed]
     public function sucursales()
     {
-        return collect(config('aa.sucursales'))
+        return collect(app(\App\Services\Sucursales::class)->nombres())
             ->merge(User::whereNotNull('sucursal')->distinct()->pluck('sucursal'))
             ->merge(Pedido::distinct()->pluck('sucursal'))
             ->filter()->unique()->sort()->values();

@@ -120,6 +120,10 @@ GRANT SELECT ON LINEAS_ARTICULOS TO USER AA_APP;
 GRANT SELECT ON EXP_TRASPASOS TO USER AA_APP;
 GRANT SELECT ON EXP_TRASPASOS_DET TO USER AA_APP;
 GRANT SELECT ON EXP_SYNC_SUCURSALES TO USER AA_APP;
+-- Traspasos capturados directo en Microsip Inventarios.
+GRANT SELECT ON DOCTOS_IN TO USER AA_APP;
+GRANT SELECT ON DOCTOS_IN_DET TO USER AA_APP;
+GRANT SELECT ON ALMACENES TO USER AA_APP;
 GRANT SELECT ON LIBRES_VTA_PV TO USER AA_APP;
 -- Lo único que escribe la app, igual que "Control de Entregas": la marca de venta entregada.
 GRANT UPDATE (ENTREGADO) ON LIBRES_VTA_PV TO USER AA_APP;
@@ -207,9 +211,16 @@ php artisan config:cache; php artisan route:cache; php artisan view:cache
 app. Con `--mapa` escribe `docs/firebird/mapa-tablas.md` (columnas y triggers); con `--buscar=TEXTO` lista tablas
 por nombre; con `--tabla=NOMBRE` (repetible) elige qué tablas documentar. Solo lee, nunca escribe en Microsip.
 
-Con Microsip conectado, los pedidos nacen en **Pedidos → Registrar traspaso de Expertos** (Cajero o Administrador):
-se captura el folio del traspaso, la app lo lee de Expertos y se elige la partida. Lo mismo por consola:
+Con Microsip conectado, los pedidos nacen solos: `aa:importar-traspasos` (cada minuto y al abrir *Inicio* el cajero
+o el administrador) da de alta como EN EXPERTOS cada traspaso capturado en Microsip Inventarios
+(`SISTEMA_ORIGEN` = IN) con el concepto `AA_CONCEPTOS_TRASPASO` (por defecto 223048 = TRASPASO DE SALIDA), desde
+`AA_TRASPASOS_DESDE`. Como no traen destino, quedan en la sucursal `AA_SUCURSAL_TRASPASOS_MICROSIP` (por defecto
+`PASO DEL TORO`), que debe llamarse igual que la del cajero. Los resurtidos que genera Expertos no entran.
+Un traspaso de Expertos se puede dar de alta a mano por consola:
 `php artisan aa:importar-traspaso TSA013341 --partida=1` (opciones `--cliente=` y `--sucursal=`).
+Las sucursales que se asignan a Cajero y Sucursal en *Usuarios* son los almacenes de Microsip (`ALMACENES`), sin los
+de `AA_ALMACENES_NO_SUCURSAL` (por defecto CEDIS, materia prima, producción y los de tránsito). Requiere el
+`GRANT SELECT ON ALMACENES` de arriba.
 Con `AA_ORIGEN=firebird`, `db:seed` solo crea los usuarios; los pedidos demo se siembran únicamente en modo `demo`.
 
 Después de cambiar el `.env` con la caché activa: `php artisan config:clear` (o volver a `config:cache`).

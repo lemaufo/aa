@@ -1,13 +1,13 @@
 # Mapa de tablas de Microsip
 
-Generado con `php artisan aa:firebird --mapa` el 2026-10-26 19:21 sobre la copia local (Firebird 5.0.3, ODS 13.1, charset NONE).
+Generado con `php artisan aa:firebird --mapa` el 2026-10-28 20:53 sobre la copia local (Firebird 5.0.3, ODS 13.1, charset NONE).
 Confirmar con IBExpert antes de escribir cualquier servicio.
 
 ## Cómo usa la app estas tablas
 
 - **Ticket** (`FirebirdVentas::consultar`): `DOCTOS_PV` con `TIPO_DOCTO` V (ticket) o F (factura) y `FOLIO`; `ESTATUS` C = cancelado, `APLICADO` <> 'S' = pendiente. Artículos en `DOCTOS_PV_DET` (sin `ROL` = 'C', componentes de juego) + `ARTICULOS.NOMBRE`.
 - **Entrega** (`FirebirdVentas::marcarEntregada`): igual que "Control de Entregas", `LIBRES_VTA_PV.ENTREGADO` = 'S' en la fila del `DOCTO_PV_ID`. La tabla no tiene triggers ni dependencias sobre esa columna. Es la única escritura de la app; no inserta filas ni toca `POR_RECOGER` u `OBSERVACIONES`.
-- **Traspaso** (`FirebirdTraspasos`): `EXP_TRASPASOS` por `FOLIO` (el más reciente), `ESTATUS` C = cancelado; partidas en `EXP_TRASPASOS_DET`, destino en `EXP_SYNC_SUCURSALES`. Los cambios de estatus quedan en `EXP_TRASPASOS_BITACORA`.
+- **Traspaso** (`FirebirdTraspasos`): `EXP_TRASPASOS` por `FOLIO` (el más reciente), `ESTATUS` C = cancelado; partidas en `EXP_TRASPASOS_DET`, destino en `EXP_SYNC_SUCURSALES`. Los cambios de estatus quedan en `EXP_TRASPASOS_BITACORA`. Si el folio no está en Expertos: `DOCTOS_IN` con `CONCEPTO_IN_ID` de `aa.conceptos_traspaso` (223048 = TRASPASO DE SALIDA), `CANCELADO` = 'S' = cancelado; partidas en `DOCTOS_IN_DET` (sin `ROL` = 'C'), destino en `ALMACENES`.
 
 ## DOCTOS_PV
 
@@ -85,7 +85,7 @@ Confirmar con IBExpert antes de escribir cualquier servicio.
 | FECHA_HORA_ENVIO | TIMESTAMP | sí |  |
 | USUARIO_AUT_CANCELACION | VARCHAR(31) | sí |  |
 
-Triggers: DOCTOS_PV_AFTALL_SNUBE, DOCTOS_PV_AFTDEL_0, DOCTOS_PV_AFTUPD_0, DOCTOS_PV_BEFDEL_0, DOCTOS_PV_BEFINS, DOCTOS_PV_BEFINSUPD_RI, DOCTOS_PV_BEFUPD_0, DOCTOS_PV_AFTUPD_1, DOCTOS_PV_BEFINSUPD_1, TR_SDEL_DOCTOS_PV, TR_SYNC_DOCTOS_PV, TR_SYNC_DOCTOS_PV_INS
+Triggers: DOCTOS_PV_AFTALL_SNUBE, DOCTOS_PV_AFTDEL_0, DOCTOS_PV_AFTUPD_0, DOCTOS_PV_BEFDEL_0, DOCTOS_PV_BEFINS, DOCTOS_PV_BEFINSUPD_RI, DOCTOS_PV_BEFUPD_0, DOCTOS_PV_AFTUPD_1, DOCTOS_PV_BEFINSUPD_1, DOCTOS_PV_AFTALL_KPIS (inactivo), TR_SDEL_DOCTOS_PV, TR_SYNC_DOCTOS_PV, TR_SYNC_DOCTOS_PV_INS
 
 ## DOCTOS_PV_DET
 
@@ -287,3 +287,130 @@ Triggers: TR_EXP_TRASPASOS_DET_INS
 | SYNC | BLOB TEXT | sí |  |
 
 Triggers: EXP_SYNC_SUCURSALES_BI, EXP_SYNC_SUCURSALES_BU, TR_EXP_SYNC_SUCURSALES_BD
+
+## DOCTOS_IN
+
+| Columna | Tipo | Nulo | Default |
+|---|---|---|---|
+| DOCTO_IN_ID | INTEGER | no |  |
+| ALMACEN_ID | INTEGER | no |  |
+| CONCEPTO_IN_ID | INTEGER | no |  |
+| SUCURSAL_ID | INTEGER | no |  |
+| FOLIO | CHAR(9) | no |  |
+| NATURALEZA_CONCEPTO | CHAR(1) | no |  |
+| FECHA | DATE | no |  |
+| ALMACEN_DESTINO_ID | INTEGER | sí |  |
+| CENTRO_COSTO_ID | INTEGER | sí |  |
+| CANCELADO | CHAR(1) | sí |  |
+| APLICADO | CHAR(1) | sí |  |
+| DESCRIPCION | VARCHAR(200) | sí |  |
+| CUENTA_CONCEPTO | VARCHAR(30) | sí |  |
+| FORMA_EMITIDA | CHAR(1) | sí |  |
+| CONTABILIZADO | CHAR(1) | sí |  |
+| SISTEMA_ORIGEN | CHAR(2) | no |  |
+| USUARIO_CREADOR | VARCHAR(31) | sí |  |
+| FECHA_HORA_CREACION | TIMESTAMP | sí |  |
+| USUARIO_AUT_CREACION | VARCHAR(31) | sí |  |
+| USUARIO_ULT_MODIF | VARCHAR(31) | sí |  |
+| FECHA_HORA_ULT_MODIF | TIMESTAMP | sí |  |
+| USUARIO_AUT_MODIF | VARCHAR(31) | sí |  |
+| USUARIO_CANCELACION | VARCHAR(31) | sí |  |
+| FECHA_HORA_CANCELACION | TIMESTAMP | sí |  |
+| USUARIO_AUT_CANCELACION | VARCHAR(31) | sí |  |
+
+Triggers: DOCTOS_IN_AFTUPD_0, DOCTOS_IN_BEFDEL_0, DOCTOS_IN_BEFINS, DOCTOS_IN_BEFINSUPD_RI, DOCTOS_IN_BEFUPD_0, EXP_EXIS_DIS_UPD, DOCTOS_IN_BEFINSUPD_1, DOCTOS_IN_AFTALL_KPIS (inactivo), TR_EXP_DOCTOS_IN10, TR_SDEL_DOCTOS_IN, TR_SYNC_DOCTOS_IN, TR_SYNC_DOCTOS_IN_INS
+
+## DOCTOS_IN_DET
+
+| Columna | Tipo | Nulo | Default |
+|---|---|---|---|
+| DOCTO_IN_DET_ID | INTEGER | no |  |
+| DOCTO_IN_ID | INTEGER | no |  |
+| ALMACEN_ID | INTEGER | no |  |
+| CONCEPTO_IN_ID | INTEGER | no |  |
+| CLAVE_ARTICULO | VARCHAR(20) | sí |  |
+| ARTICULO_ID | INTEGER | no |  |
+| TIPO_MOVTO | CHAR(1) | no |  |
+| UNIDADES | NUMERIC(18,5) | sí |  |
+| COSTO_UNITARIO | NUMERIC(18,6) | sí |  |
+| COSTO_TOTAL | NUMERIC(15,2) | sí |  |
+| METODO_COSTEO | CHAR(1) | no |  |
+| CANCELADO | CHAR(1) | sí |  |
+| APLICADO | CHAR(1) | sí |  |
+| COSTEO_PEND | CHAR(1) | sí |  |
+| PEDIMENTO_PEND | CHAR(1) | sí |  |
+| ROL | CHAR(1) | no | 'N' |
+| FECHA | DATE | no | CURRENT_DATE |
+| CENTRO_COSTO_ID | INTEGER | sí |  |
+
+Triggers: DOCTOS_IN_DET_BEFDEL_0, DOCTOS_IN_DET_BEFINS, DOCTOS_IN_DET_BEFUPD_0
+
+## CONCEPTOS_IN
+
+| Columna | Tipo | Nulo | Default |
+|---|---|---|---|
+| CONCEPTO_IN_ID | INTEGER | no |  |
+| NOMBRE | VARCHAR(50) | no |  |
+| NOMBRE_ABREV | VARCHAR(30) | no |  |
+| NATURALEZA | CHAR(1) | sí |  |
+| FOLIO_AUTOM | CHAR(1) | sí |  |
+| TIPO | CHAR(1) | sí |  |
+| ES_PREDEF | CHAR(1) | sí |  |
+| ES_PREDET | CHAR(1) | sí |  |
+| OCULTO | CHAR(1) | no |  |
+| ID_INTERNO | CHAR(1) | sí |  |
+| TIPO_CALCULO | CHAR(1) | sí |  |
+| CENTROS_COSTO | CHAR(1) | sí |  |
+| CREAR_POLIZAS | CHAR(1) | sí |  |
+| CUENTA_CONTABLE | VARCHAR(30) | sí |  |
+| PREG_CUENTA | CHAR(1) | sí |  |
+| TIPO_POLIZA | CHAR(1) | sí |  |
+| DESCRIPCION_POLIZA | VARCHAR(200) | sí |  |
+| USUARIO_CREADOR | VARCHAR(31) | sí |  |
+| FECHA_HORA_CREACION | TIMESTAMP | sí |  |
+| USUARIO_AUT_CREACION | VARCHAR(31) | sí |  |
+| USUARIO_ULT_MODIF | VARCHAR(31) | sí |  |
+| FECHA_HORA_ULT_MODIF | TIMESTAMP | sí |  |
+| USUARIO_AUT_MODIF | VARCHAR(31) | sí |  |
+
+Triggers: CONCEPTOS_IN_BEFDEL_0, CONCEPTOS_IN_BEFINS, CONCEPTOS_IN_BEFUPD, CONCEPTOS_IN_BEFUPDDEL_RI, CONCEPTOS_IN_BEFUPD_0
+
+## ALMACENES
+
+| Columna | Tipo | Nulo | Default |
+|---|---|---|---|
+| ALMACEN_ID | INTEGER | no |  |
+| NOMBRE | VARCHAR(50) | no |  |
+| NOMBRE_ABREV | VARCHAR(30) | no |  |
+| ES_PPAL | CHAR(1) | sí |  |
+| ES_PREDET | CHAR(1) | sí |  |
+| OCULTO | CHAR(1) | no |  |
+| CALLE | VARCHAR(430) | sí |  |
+| NOMBRE_CALLE | VARCHAR(100) | sí |  |
+| NUM_EXTERIOR | VARCHAR(10) | sí |  |
+| NUM_INTERIOR | VARCHAR(10) | sí |  |
+| COLONIA | VARCHAR(100) | sí |  |
+| POBLACION | VARCHAR(100) | sí |  |
+| REFERENCIA | VARCHAR(100) | sí |  |
+| CIUDAD_ID | INTEGER | sí |  |
+| CODIGO_POSTAL | VARCHAR(10) | sí |  |
+| TELEFONO1 | VARCHAR(35) | sí |  |
+| TELEFONO2 | VARCHAR(35) | sí |  |
+| CUENTA_ALMACEN | VARCHAR(30) | sí |  |
+| CUENTA_COSTO_VENTA | VARCHAR(30) | sí |  |
+| CUENTA_VENTAS | VARCHAR(30) | sí |  |
+| CUENTA_DSCTO_VENTAS | VARCHAR(30) | sí |  |
+| CUENTA_DEVOL_VENTAS | VARCHAR(30) | sí |  |
+| CUENTA_COMPRAS | VARCHAR(30) | sí |  |
+| CUENTA_DEVOL_COMPRAS | VARCHAR(30) | sí |  |
+| USUARIO_CREADOR | VARCHAR(31) | sí |  |
+| FECHA_HORA_CREACION | TIMESTAMP | sí |  |
+| USUARIO_AUT_CREACION | VARCHAR(31) | sí |  |
+| USUARIO_ULT_MODIF | VARCHAR(31) | sí |  |
+| FECHA_HORA_ULT_MODIF | TIMESTAMP | sí |  |
+| USUARIO_AUT_MODIF | VARCHAR(31) | sí |  |
+| CIUDAD | VARCHAR(50) | sí |  |
+| ESTADO | VARCHAR(50) | sí |  |
+| PAIS | VARCHAR(50) | sí |  |
+
+Triggers: ALMACENES_AFTALL_SNUBE (inactivo), ALMACENES_BEFALL_SNUBE (inactivo), ALMACENES_BEFDEL_0, ALMACENES_BEFINS, ALMACENES_BEFUPD, ALMACENES_BEFUPDDEL_RI

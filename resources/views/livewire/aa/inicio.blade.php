@@ -9,6 +9,25 @@ use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
 new #[Title('Inicio')] class extends Component {
+    /**
+     * Los traspasos que el cajero capturó en Microsip aparecen solos en "Por atender".
+     * El programador lo hace cada minuto; aquí se adelanta (una vez por minuto) por si no está corriendo.
+     */
+    public function mount(\App\Services\AltaPedido $alta): void
+    {
+        if (config('aa.origen') !== 'firebird' || ! in_array(auth()->user()->rol, [\App\Enums\Rol::Cajero, \App\Enums\Rol::Admin], true)) {
+            return;
+        }
+
+        if (\Illuminate\Support\Facades\Cache::add('aa:importar-traspasos', true, 60)) {
+            try {
+                $alta->importarDeMicrosip();
+            } catch (Throwable $e) {
+                report($e);
+            }
+        }
+    }
+
     #[Computed]
     public function visibles()
     {

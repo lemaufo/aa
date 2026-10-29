@@ -16,6 +16,7 @@ class DemoVentas implements VentasMicrosip
             'folio' => $v->folio,
             'estado' => $v->estado,
             'articulo' => $v->articulo,
+            'cantidad' => isset($v->cantidad) ? (float) $v->cantidad : null,
             'lineas_ajenas' => (int) $v->lineas_ajenas,
             'entregada' => (bool) $v->entregada,
         ] : null;

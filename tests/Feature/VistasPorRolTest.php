@@ -110,18 +110,64 @@ it('muestra a cada rol solo el panel de su paso', function () {
     $this->actingAs(usuario(Rol::Cedis))->get(route('pedidos.show', $p))->assertDontSee('Imprimir la etiqueta');
 });
 
-it('registrar traspaso es solo para cajero y administrador', function () {
-    Volt::actingAs(usuario(Rol::Cajero))->test('aa.acciones.registrar-traspaso')->assertOk();
-    Volt::actingAs(usuario(Rol::Admin))->test('aa.acciones.registrar-traspaso')->assertOk();
-    Volt::actingAs(usuario(Rol::Produccion))->test('aa.acciones.registrar-traspaso')->assertForbidden();
+/** Traspaso capturado en Microsip, tal como lo devuelve FirebirdTraspasos. */
+function traspasosMicrosip(array $folios): void
+{
+    app()->instance(App\Contracts\TraspasosExpertos::class, new class($folios) implements App\Contracts\TraspasosExpertos
+    {
+        public function __construct(private array $folios) {}
+
+        public function estaCancelado(string $folio): bool
+        {
+            return false;
+        }
+
+        public function leer(string $folio): ?array
+        {
+            return in_array($folio, $this->folios, true) ? [
+                'folio' => $folio, 'estatus' => 'A', 'fecha' => '2026-10-28', 'destino' => null, 'origen' => 'Microsip',
+                'observaciones' => "VERONICA CORZO\n12 LAM A 9 = 108 ML",
+                'partidas' => [['partida' => 1, 'clave' => '09003031A', 'articulo' => 'LAMINA ZINTROALUM C-26 4 PIES ACANALADA',
+                    'cantidad' => 108.0, 'unidad' => 'ML', 'peso_unitario' => 4.69, 'notas' => null]],
+            ] : null;
+        }
+
+        public function deMicrosipDesde(string $fecha): array
+        {
+            return $this->folios;
+        }
+    });
+}
+
+it('el traspaso capturado en Microsip aparece solo en el Inicio del cajero, sin buscarlo', function () {
+    config(['aa.origen' => 'firebird', 'aa.sucursal_traspasos_microsip' => 'Sucursal Centro']);
+    traspasosMicrosip(['TSA013342']);
+
+    $this->actingAs(usuario(Rol::Cajero))->get(route('inicio'))
+        ->assertOk()
+        ->assertSee('TSA013342')
+        ->assertSee('Atender');
+
+    $pedido = App\Models\Pedido::where('folio', 'TSA013342')->sole();
+    expect($pedido->estatus)->toBe(Estatus::EnExpertos)
+        ->and($pedido->sucursal)->toBe('Sucursal Centro')
+        ->and($pedido->metros_traspaso)->toBe(108.0)
+        ->and($pedido->eventos()->sole()->accion)->toBe('Traspaso leído de Microsip');
 });
 
-it('solo enseña Registrar traspaso con Microsip conectado', function () {
-    $cajero = usuario(Rol::Cajero);
-
-    $this->actingAs($cajero)->get(route('pedidos.index'))->assertDontSee('Registrar traspaso de Expertos');
-
+it('no duplica el traspaso al volver a importar', function () {
     config(['aa.origen' => 'firebird']);
-    $this->actingAs($cajero)->get(route('pedidos.index'))->assertSee('Registrar traspaso de Expertos');
-    $this->actingAs(usuario(Rol::Produccion))->get(route('pedidos.index'))->assertDontSee('Registrar traspaso de Expertos');
+    traspasosMicrosip(['TSA013342']);
+
+    $this->artisan('aa:importar-traspasos')->expectsOutputToContain('Pedidos creados desde Microsip: 1')->assertSuccessful();
+    $this->artisan('aa:importar-traspasos')->expectsOutputToContain('Pedidos creados desde Microsip: 0')->assertSuccessful();
+
+    expect(App\Models\Pedido::where('folio', 'TSA013342')->count())->toBe(1);
+});
+
+it('Pedidos ya no tiene buscador de traspasos', function () {
+    config(['aa.origen' => 'firebird']);
+    traspasosMicrosip([]);
+
+    $this->actingAs(usuario(Rol::Cajero))->get(route('pedidos.index'))->assertOk()->assertDontSee('Buscar traspaso');
 });

@@ -27,14 +27,14 @@ La app **nunca cancela por su cuenta**: lee la cancelación que se hizo en Admin
 
 ## Cajero
 
-1. **Registra el traspaso.** En *Pedidos → Registrar traspaso de Expertos*, escribe el folio que capturaste en
-   AdminExpertos (por ejemplo `TSA013341`; también sirve `tsa13341`) y pulsa *Buscar en Expertos*. Elige el
-   artículo del pedido (un pedido = un artículo) y pulsa *Registrar pedido*.
-   - Si el traspaso no existe, está cancelado o ya se registró, la app te lo dice y no lo crea.
+1. **Captura el traspaso en Microsip** con el concepto *TRASPASO DE SALIDA*. En menos de un minuto aparece solo
+   en tu *Inicio*, en *Por atender*, con lo que escribiste en la descripción. No hay que buscarlo.
+   - Si el traspaso trae varios artículos, el pedido toma el primero (un pedido = un artículo).
 2. **Liga el traspaso con la venta.** En el pedido, captura el **folio del ticket** de Microsip. Al salir del campo
    la app revisa que el ticket:
    - exista y esté **cobrado** (no cancelado ni pendiente),
    - sea del **mismo artículo** que el traspaso,
+   - venda **la misma cantidad** que el traspaso (ni de más ni de menos),
    - sea un **ticket independiente**, sin productos de línea,
    - no esté ligado ya a otro traspaso.
 3. Completa **cliente, teléfono, fecha prometida, forma de entrega** (CEDIS, a domicilio o sucursal) y los
@@ -103,6 +103,7 @@ personal, pesos, ventas ni evidencias. No modifica nada.
 |---|---|
 | "No se pudo consultar Microsip" | Microsip o la red no responde. Espera unos minutos e intenta de nuevo |
 | "El ticket es de otro artículo" | El pedido especial se vende en un ticket del mismo artículo del traspaso |
+| "Deben ser la misma cantidad" | El ticket vende una cantidad distinta a la del traspaso: corrige la venta o el traspaso en Microsip |
 | "Trae productos de línea" | Se vende en un ticket aparte, solo con el pedido especial |
 | El peso no pasa | Está fuera de ±5 %: revisa piezas y medidas contra la etiqueta y vuelve a pesar |
 | "Ese código no es de este pedido" | La etiqueta escaneada es de otro pedido; revisa el folio |

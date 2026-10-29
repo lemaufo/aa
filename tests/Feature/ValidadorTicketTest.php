@@ -48,3 +48,28 @@ it('rechaza si el traspaso ya se canceló en Expertos', function () {
 
     expect(app(ValidadorTicket::class)->validar($this->p, 'V-300'))->toBe(["El traspaso {$this->p->folio} está cancelado en Expertos."]);
 });
+
+it('exige que el ticket venda la misma cantidad que el traspaso', function (float $vendida, bool $valido) {
+    app()->instance(App\Contracts\VentasMicrosip::class, new class($vendida) implements App\Contracts\VentasMicrosip
+    {
+        public function __construct(private float $vendida) {}
+
+        public function consultar(string $folio): ?array
+        {
+            return ['folio' => $folio, 'estado' => 'pagada', 'articulo' => 'Lámina acanalada cal. 26',
+                'cantidad' => $this->vendida, 'lineas_ajenas' => 0, 'entregada' => false];
+        }
+
+        public function marcarEntregada(string $folio, string $usuario, ?string $recibe): void {}
+    });
+
+    $errores = app(ValidadorTicket::class)->validar($this->p, 'A00000005');
+
+    $valido
+        ? expect($errores)->toBe([])
+        : expect($errores)->toBe(["El ticket vende {$vendida} y el traspaso es de 60. Deben ser la misma cantidad."]);
+})->with([
+    'igual' => [60.0, true],
+    'de menos' => [55.0, false],
+    'de más' => [61.5, false],
+]);

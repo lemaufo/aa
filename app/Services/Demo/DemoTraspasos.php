@@ -17,4 +17,9 @@ class DemoTraspasos implements TraspasosExpertos
     {
         return null;
     }
+
+    public function deMicrosipDesde(string $fecha): array
+    {
+        return [];
+    }
 }

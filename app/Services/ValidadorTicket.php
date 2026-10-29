@@ -55,6 +55,12 @@ class ValidadorTicket
             $errores[] = "El ticket es de «{$ticket['articulo']}» y el traspaso es de «{$pedido->material}». Debe ser el mismo artículo.";
         }
 
+        // Se vende exactamente lo que se traspasó: ni de más ni de menos.
+        if (($ticket['cantidad'] ?? null) !== null && abs($ticket['cantidad'] - (float) $pedido->metros_traspaso) > 0.001) {
+            $errores[] = 'El ticket vende '.$this->numero($ticket['cantidad']).' y el traspaso es de '
+                .$this->numero((float) $pedido->metros_traspaso).'. Deben ser la misma cantidad.';
+        }
+
         if (config('aa.ticket_exclusivo') && $ticket['lineas_ajenas'] > 0) {
             $errores[] = 'El ticket trae productos de línea. El pedido especial debe venderse en un ticket independiente.';
         }
@@ -66,6 +72,11 @@ class ValidadorTicket
         }
 
         return $errores;
+    }
+
+    private function numero(float $n): string
+    {
+        return rtrim(rtrim(number_format($n, 3, '.', ','), '0'), '.');
     }
 
     private function normalizar(string $texto): string

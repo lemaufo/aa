@@ -137,8 +137,8 @@ new class extends Component {
     <form wire:submit="ligar" class="grid gap-5 px-5 py-5">
         @if ($pedido->instrucciones)
             <div class="rounded-md bg-plancha px-4 py-3">
-                <p class="text-[15px] font-semibold">Lo que se escribió en Expertos</p>
-                <p class="mt-0.5 text-acero">{{ $pedido->instrucciones }}</p>
+                <p class="text-[15px] font-semibold">Lo que se escribió en el traspaso</p>
+                <p class="mt-0.5 whitespace-pre-line text-acero">{{ $pedido->instrucciones }}</p>
             </div>
         @endif
 

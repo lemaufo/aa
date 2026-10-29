@@ -37,7 +37,7 @@ Microsip PV (ticket) ─────┼─ lectura (Firebird) ────┤
 | Reglas del flujo: acción, rol, desde/hacia | `app/Support/Flujo.php` |
 | Aplicar una acción con bitácora y transacción; reintento de venta; cancelaciones | `app/Services/FlujoService.php` |
 | Validación del ticket contra el traspaso | `app/Services/ValidadorTicket.php` |
-| Alta de pedido desde un traspaso de Expertos | `app/Services/AltaPedido.php` |
+| Alta de pedido desde un traspaso de Expertos o Microsip | `app/Services/AltaPedido.php` |
 | Contratos con Microsip / Expertos | `app/Contracts/VentasMicrosip.php`, `TraspasosExpertos.php` |
 | Implementación real (Firebird) | `app/Services/Firebird/FirebirdVentas.php`, `FirebirdTraspasos.php`, `Microsip.php` |
 | Catálogo de artículos (solo lectura, pantalla *Artículos* del administrador) | `app/Services/Firebird/FirebirdArticulos.php`, `resources/views/livewire/aa/articulos.blade.php` |
@@ -52,7 +52,8 @@ Microsip PV (ticket) ─────┼─ lectura (Firebird) ────┤
 | Comando | Qué hace |
 |---|---|
 | `php artisan aa:firebird` | Prueba la conexión con Microsip: versión, charset, tablas. `--mapa` regenera el mapa de tablas; `--buscar=TEXTO` busca tablas |
-| `php artisan aa:importar-traspaso FOLIO --partida=1` | Lo mismo que *Registrar traspaso* en la pantalla, a nombre del administrador |
+| `php artisan aa:importar-traspasos` | Da de alta como pedido los traspasos de salida capturados en Microsip (programado cada minuto; también al abrir Inicio) |
+| `php artisan aa:importar-traspaso FOLIO --partida=1` | Da de alta a mano un traspaso (de Expertos o Microsip), a nombre del administrador |
 | `php artisan aa:sincronizar-cancelaciones` | Cancela los pedidos EN EXPERTOS cuyo traspaso se canceló en Expertos (programado cada 5 min) |
 | `php artisan aa:purgar-evidencias` | Borra fotos y acuses de más de 2 años; el pedido se conserva (programado a las 3:00) |
 | `php artisan aa:crear-admin USUARIO` | Crea el primer administrador o le cambia la contraseña (en producción no corren los seeders) |

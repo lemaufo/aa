@@ -66,11 +66,6 @@ new #[Title('Pedidos')] class extends Component {
         <p class="max-w-prose text-acero">Busca por folio, cliente o folio de venta. Abre un pedido para ver su avance y su bitácora.</p>
     </header>
 
-    {{-- Con Microsip conectado, los pedidos nacen del traspaso que el cajero registra con su folio. --}}
-    @if (config('aa.origen') === 'firebird' && in_array(auth()->user()->rol, [\App\Enums\Rol::Cajero, \App\Enums\Rol::Admin], true))
-        <livewire:aa.acciones.registrar-traspaso />
-    @endif
-
     <div class="grid gap-3">
         <div class="relative">
             <label for="buscar" class="sr-only">Buscar pedidos</label>

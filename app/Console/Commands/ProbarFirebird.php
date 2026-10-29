@@ -21,7 +21,7 @@ class ProbarFirebird extends Command
     protected $description = 'Prueba la conexión con Microsip/Firebird y genera el mapa de tablas';
 
     /** Las tablas que usa la app (FirebirdVentas, FirebirdTraspasos). Son las del permiso de AA_APP. */
-    private const CANDIDATAS = ['DOCTOS_PV', 'DOCTOS_PV_DET', 'ARTICULOS', 'LIBRES_VTA_PV', 'EXP_TRASPASOS', 'EXP_TRASPASOS_DET', 'EXP_TRASPASOS_BITACORA', 'EXP_SYNC_SUCURSALES'];
+    private const CANDIDATAS = ['DOCTOS_PV', 'DOCTOS_PV_DET', 'ARTICULOS', 'LIBRES_VTA_PV', 'EXP_TRASPASOS', 'EXP_TRASPASOS_DET', 'EXP_TRASPASOS_BITACORA', 'EXP_SYNC_SUCURSALES', 'DOCTOS_IN', 'DOCTOS_IN_DET', 'CONCEPTOS_IN', 'ALMACENES'];
 
     public function handle(): int
     {
@@ -107,7 +107,9 @@ class ProbarFirebird extends Command
             ." en la fila del `DOCTO_PV_ID`. La tabla no tiene triggers ni dependencias sobre esa columna. Es la única escritura de la app;"
             ." no inserta filas ni toca `POR_RECOGER` u `OBSERVACIONES`.\n"
             ."- **Traspaso** (`FirebirdTraspasos`): `EXP_TRASPASOS` por `FOLIO` (el más reciente), `ESTATUS` C = cancelado;"
-            ." partidas en `EXP_TRASPASOS_DET`, destino en `EXP_SYNC_SUCURSALES`. Los cambios de estatus quedan en `EXP_TRASPASOS_BITACORA`.\n";
+            ." partidas en `EXP_TRASPASOS_DET`, destino en `EXP_SYNC_SUCURSALES`. Los cambios de estatus quedan en `EXP_TRASPASOS_BITACORA`."
+            ." Si el folio no está en Expertos: `DOCTOS_IN` con `CONCEPTO_IN_ID` de `aa.conceptos_traspaso` (223048 = TRASPASO DE SALIDA),"
+            ." `CANCELADO` = 'S' = cancelado; partidas en `DOCTOS_IN_DET` (sin `ROL` = 'C'), destino en `ALMACENES`.\n";
 
         foreach ($tablas as $tabla) {
             $md .= "\n## {$tabla}\n\n| Columna | Tipo | Nulo | Default |\n|---|---|---|---|\n";

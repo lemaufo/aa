@@ -23,7 +23,7 @@ class FirebirdVentas implements VentasMicrosip
 
         // ROL: N = artículo normal, J = juego, C = componente del juego (no cuenta como línea aparte).
         $lineas = array_map(Microsip::fila(...), Microsip::db()->select(
-            "select d.articulo_id, a.nombre
+            "select d.articulo_id, a.nombre, coalesce(d.unidades, 0) as unidades
                from doctos_pv_det d join articulos a on a.articulo_id = d.articulo_id
               where d.docto_pv_id = ? and d.rol <> 'C'
               order by d.posicion, d.docto_pv_det_id",
@@ -40,6 +40,11 @@ class FirebirdVentas implements VentasMicrosip
                 default => 'pagada',
             },
             'articulo' => $principal['nombre'] ?? '',
+            // Si el artículo se capturó en varios renglones, cuenta el total.
+            'cantidad' => $principal === null ? 0.0 : (float) array_sum(array_map(
+                fn ($l) => (float) $l['unidades'],
+                array_filter($lineas, fn ($l) => $l['articulo_id'] === $principal['articulo_id'])
+            )),
             'lineas_ajenas' => count(array_filter($lineas, fn ($l) => $l['articulo_id'] !== $principal['articulo_id'])),
             'entregada' => $docto['entregado'] === 'S',
         ];
