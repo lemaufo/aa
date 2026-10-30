@@ -6,10 +6,15 @@
 | [iis.md](iis.md) | Instalación en IIS: PHP, extensiones, Firebird, MySQL, tareas programadas, servidor del cliente |
 | [firebird/mapa-tablas.md](firebird/mapa-tablas.md) | Tablas de Microsip/AdminExpertos que usa la app, columnas, triggers y cómo marca la entrega "Control de Entregas" (se regenera con `php artisan aa:firebird --mapa`) |
 
+---
+
+<br>
+
 ## Qué hace la app
 
-Sigue cada pedido especial desde el traspaso en AdminExpertos hasta la entrega al cliente con acuse firmado, y al
-final marca la venta como entregada en Microsip. Pila: Laravel 12, Livewire 4 + Volt, Tailwind 4.
+Sigue cada pedido especial desde el traspaso en AdminExpertos hasta la entrega al cliente con acuse firmado, y al final marca la venta como entregada en Microsip.
+
+Pila: Laravel 12, Livewire 4 + Volt, Tailwind 4.
 
 ```
 AdminExpertos (traspaso) ─┐                         ┌─> LIBRES_VTA_PV.ENTREGADO = 'S'
@@ -21,14 +26,19 @@ Microsip PV (ticket) ─────┼─ lectura (Firebird) ────┤
                           └─ storage/app/private/evidencias (fotos y acuses, fuera de public/)
 ```
 
+<br>
+
 ### Dos bases, dos usos
 
 - **MySQL `aa`** (`config/database.php`, conexión por defecto): todo lo propio de la app.
+
 - **Firebird** (conexión `firebird`): Microsip y AdminExpertos en la misma base. Funciona con Firebird 3, 4 o 5.
-  Se lee para ventas, traspasos y cancelaciones; se escribe solo `LIBRES_VTA_PV.ENTREGADO`.
-  No se modifica el esquema de Microsip.
-- **`AA_ORIGEN`** (`config/aa.php`): `firebird` (por defecto) o `demo` (tablas `demo_ventas` y `demo_traspasos` en
-  MySQL, sin Microsip). Las pruebas automáticas siempre corren en `demo`.
+
+  Se lee para ventas, traspasos y cancelaciones; se escribe solo `LIBRES_VTA_PV.ENTREGADO`. No se modifica el esquema de Microsip.
+
+- **`AA_ORIGEN`** (`config/aa.php`): `firebird` (por defecto) o `demo` (tablas `demo_ventas` y `demo_traspasos` en MySQL, sin Microsip). Las pruebas automáticas siempre corren en `demo`.
+
+<br>
 
 ### Dónde está cada cosa
 
@@ -47,6 +57,8 @@ Microsip PV (ticket) ─────┼─ lectura (Firebird) ────┤
 | Configuración de negocio (tolerancia, retención, sucursales, dispositivos) | `config/aa.php` |
 | IIS | `public/web.config` |
 
+<br>
+
 ### Comandos
 
 | Comando | Qué hace |
@@ -59,6 +71,10 @@ Microsip PV (ticket) ─────┼─ lectura (Firebird) ────┤
 | `php artisan aa:crear-admin USUARIO` | Crea el primer administrador o le cambia la contraseña (en producción no corren los seeders) |
 | `php artisan aa:dispositivo-codigo` | Código de un solo uso para autorizar un equipo |
 
+---
+
+<br>
+
 ## Desarrollo
 
 ```powershell
@@ -68,8 +84,11 @@ php artisan serve                 # o el sitio de IIS (docs/iis.md)
 php artisan test                  # pruebas automáticas (Pest), siempre con AA_ORIGEN=demo
 ```
 
-Usuarios de prueba (solo local; `UsuarioSeeder` no corre en producción): `admin`, `cajero`, `produccion`, `cedis`,
-`sucursal`, `consulta`. Contraseñas en `config/aa.php`.
+Usuarios de prueba (solo local; `UsuarioSeeder` no corre en producción): `admin`, `cajero`, `produccion`, `cedis`, `sucursal`, `consulta`.
+
+Contraseñas en `config/aa.php`.
+
+<br>
 
 ### Pruebas automáticas
 
@@ -83,15 +102,23 @@ Usuarios de prueba (solo local; `UsuarioSeeder` no corre en producción): `admin
 | `VistasPorRolTest.php` | Cada pantalla con el rol que la usa y con uno que no debe verla; alta y edición de usuarios |
 | `Unit/MicrosipFolioTest.php` | Normalización de folios de Microsip (`tba74886` → `TBA074886`) |
 
-La integración con Firebird no tiene prueba automática a propósito: se prueba a mano sobre la copia
-(`php artisan aa:firebird`, registrar un traspaso real y ligarlo con su ticket).
+La integración con Firebird no tiene prueba automática a propósito: se prueba a mano sobre la copia (`php artisan aa:firebird`, registrar un traspaso real y ligarlo con su ticket).
+
+<br>
 
 ### Flujo de trabajo en GitHub
 
 - `main` producción, `develop` integración; `feature/<tema>` y `fix/<tema>` nacen de `develop`.
+
 - Commits pequeños con prefijo `feat:`, `fix:`, `test:`, `docs:`.
+
 - PR a `develop` con qué cambia, cómo probarlo y captura si toca una vista. **Lo aprueba el otro desarrollador.**
+
 - `.env` nunca se sube; solo `.env.example` sin valores reales.
+
+---
+
+<br>
 
 ## Estado contra el plan (al 27 oct 2026)
 
@@ -121,10 +148,8 @@ La integración con Firebird no tiene prueba automática a propósito: se prueba
 | S7 | Hardware real, instalación limpia, servidor del cliente → Firebird | ❌ Requiere el equipo físico y el servidor |
 | S8 | Capacitación por rol y manual corto | ✅ Manual en `manual.md`; la capacitación es presencial |
 
-## Supuestos por confirmar con el cliente
+---
 
-- La cantidad del traspaso se guarda como `metros_traspaso` y el `PESO_UNITARIO` del artículo como kg por metro.
-  En los traspasos revisados la unidad es `PZA`: confirmar que el peso teórico tiene sentido para estos artículos.
-- Estatus de `EXP_TRASPASOS`: solo `C` (cancelado) está confirmado; P, E, F y A se dedujeron de la bitácora.
-- Las sucursales de la app deben llamarse igual que en Expertos (`PASO DEL TORO`, `ISLA`…) para que Cajero y
-  Sucursal vean sus pedidos; `config/aa.php` todavía trae los nombres del prototipo.
+<br>
+
+## Supuestos por confirmar con el cliente
