@@ -1,8 +1,12 @@
 # Manual corto por rol
 
 Trazabilidad de pedidos especiales de Aceros el Águila. Cada persona entra con su **usuario** (no con correo) y
-solo ve lo que le toca. En el **Inicio** aparece arriba lo que tienes por atender, ordenado por fecha prometida:
+solo ve lo que le toca.
+
+En el **Inicio** aparece arriba lo que tienes por atender, ordenado por fecha prometida:
 lo vencido y lo de hoy primero.
+
+<br>
 
 ## El recorrido de un pedido
 
@@ -25,11 +29,14 @@ La app **nunca cancela por su cuenta**: lee la cancelación que se hizo en Admin
 
 ---
 
+<br>
+
 ## Cajero
 
 1. **Captura el traspaso en Microsip** con el concepto *TRASPASO DE SALIDA*. En menos de un minuto aparece solo
    en tu *Inicio*, en *Por atender*, con lo que escribiste en la descripción. No hay que buscarlo.
    - Si el traspaso trae varios artículos, el pedido toma el primero (un pedido = un artículo).
+
 2. **Liga el traspaso con la venta.** En el pedido, captura el **folio del ticket** de Microsip. Al salir del campo
    la app revisa que el ticket:
    - exista y esté **cobrado** (no cancelado ni pendiente),
@@ -37,12 +44,18 @@ La app **nunca cancela por su cuenta**: lee la cancelación que se hizo en Admin
    - venda **la misma cantidad** que el traspaso (ni de más ni de menos),
    - sea un **ticket independiente**, sin productos de línea,
    - no esté ligado ya a otro traspaso.
+
 3. Completa **cliente, teléfono, fecha prometida, forma de entrega** (CEDIS, a domicilio o sucursal) y los
    **cortes** (piezas × medida; deben cuadrar con los metros del traspaso). Con entrega a domicilio pide quién recibe
    y la dirección. Pulsa *Ligar*.
+
 4. **Cambiar datos de entrega**: se puede hasta que el pedido llegue a CEDIS; pide **tu contraseña** y queda en la bitácora.
 
 Solo ves los pedidos de tu sucursal.
+
+---
+
+<br>
 
 ## Producción
 
@@ -50,45 +63,73 @@ Tres pasos, en orden; el siguiente no se habilita hasta terminar el anterior.
 
 1. **Imprime la etiqueta** (es la orden de producción): piezas y medidas de caja, folio y código de barras.
    Las piezas y medidas no se editan aquí.
+
 2. **Pesa.** Captura el peso de la báscula (o usa el **modo balanza** y los botones de ajuste). Se compara contra el
    peso teórico: debe quedar dentro de **±5 %**. Si se sale, revisa piezas y medidas contra la etiqueta y vuelve a
    pesar. Anota el rollo o lote si aplica.
+
 3. **Sube las dos fotos**: el producto terminado con la etiqueta visible y la báscula. Desde el celular se abre la cámara.
+
 4. **Despacha a CEDIS** escaneando la etiqueta (o tecleando el folio).
+
+---
+
+<br>
 
 ## CEDIS
 
 1. **Recibe y valida**: escanea la etiqueta y anota la **zona del patio** (obligatoria si el cliente recoge en CEDIS).
+
 2. **Define cómo sale**, según lo que eligió la caja:
    - *Recoge en CEDIS* → queda EN CEDIS.
    - *A domicilio* → captura **camión y repartidor**.
    - *A sucursal* → se envía a la sucursal.
+
 3. **Entrega** (el cliente recoge, o regresa el repartidor): nombre de quien recibe y **foto del acuse firmado**,
    ambos obligatorios. Con repartidor, confirma que regresó con el acuse.
+
 4. Al entregar, la venta se marca como entregada en Microsip. Si Microsip no responde, el pedido queda entregado
    con un aviso rojo y el botón **Reintentar ahora**.
+
+---
+
+<br>
 
 ## Sucursal
 
 1. **Recibe** el pedido escaneando la etiqueta.
+
 2. **Avisa al cliente** con *Avisar al cliente por WhatsApp*: abre WhatsApp con el mensaje escrito; tú decides si lo
    envías. (CEDIS tiene el mismo botón cuando el cliente recoge ahí.)
+
 3. **Entrega al cliente**: escanea la etiqueta, nombre de quien recibe y **foto del acuse firmado** (obligatorios).
+
 4. Igual que CEDIS: si Microsip no se actualizó, usa **Reintentar ahora**.
 
 Solo ves los pedidos de tu sucursal.
 
+---
+
+<br>
+
 ## Administrador
 
 - Puede hacer **cualquier paso** del flujo, de cualquier sucursal.
+
 - **Usuarios**: *Nuevo usuario* o *Editar*. Usuario sin espacios, rol, sucursal (obligatoria para Cajero y
   Sucursal) y contraseña de mínimo 8. Al editar, la contraseña vacía conserva la actual. No puedes quitarte tu
   propio rol de administrador. Abajo está la matriz de **quién puede hacer qué**.
+
 - **Artículos**: el catálogo de Microsip en vivo, solo de consulta. Busca por nombre o clave (no importan
   acentos ni mayúsculas), filtra por estatus y pulsa un artículo para ver sus unidades, peso, todas sus claves y
   cuántos pedidos de la app lo usan.
+
 - **Equipos**: genera un código de un solo uso para autorizar una computadora o celular, y revoca los que ya no se
   usan (solo cuando la autorización de equipos está encendida).
+
+---
+
+<br>
 
 ## Consulta
 
@@ -96,6 +137,8 @@ Solo entra a **Rastreo**: busca un pedido por su **folio exacto** y ve su estatu
 personal, pesos, ventas ni evidencias. No modifica nada.
 
 ---
+
+<br>
 
 ## Preguntas frecuentes
 
