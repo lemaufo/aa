@@ -1,10 +1,13 @@
 # Instalación en IIS (equipos de desarrollo y servidor del cliente)
 
 Guía para dejar la app sirviéndose por IIS con PHP por FastCGI, MySQL para `aa` y la copia de Microsip en Firebird.
+
 La misma configuración se usa en los dos equipos de desarrollo y en el servidor del cliente. Si un paso no se puede
 reproducir tal cual, se corrige aquí en un PR, no solo en el equipo.
 
 > Nunca se desarrolla ni se prueba contra la base de producción de Microsip. Solo contra una copia restaurada.
+
+<br>
 
 ## 1. Requisitos
 
@@ -19,6 +22,10 @@ reproducir tal cual, se corrige aquí en un PR, no solo en el equipo.
 | MySQL | 8.x | Base `aa` |
 | Composer y Node | Composer 2, Node 20+ | Solo para compilar; en el servidor basta subir `public/build` |
 
+---
+
+<br>
+
 ## 2. Activar IIS y FastCGI
 
 En PowerShell como administrador:
@@ -30,6 +37,10 @@ Enable-WindowsOptionalFeature -Online -All -FeatureName `
 ```
 
 Después instalar **URL Rewrite** (sin él, IIS responde 500.19 al leer el `web.config`).
+
+---
+
+<br>
 
 ## 3. PHP
 
@@ -66,6 +77,10 @@ fastcgi.impersonate = 1
 
 3. Comprobar: `php -m` debe listar `PDO_Firebird`, `pdo_mysql`, `mbstring`, `openssl`, `fileinfo` y `gd`.
 
+---
+
+<br>
+
 ## 4. Firebird (cualquier versión 3, 4 o 5)
 
 La app no depende de la versión del servidor: PHP habla con Firebird a través de `fbclient.dll`, y un cliente de
@@ -74,6 +89,7 @@ La app no depende de la versión del servidor: PHP habla con Firebird a través 
 - **`fbclient.dll` de 64 bits** (la misma arquitectura que PHP). Tomarlo de la carpeta de instalación de Firebird
   (`C:\Program Files\Firebird\Firebird_5_0\fbclient.dll`) y copiarlo a `C:\php` o tenerlo en el `PATH`.
   Si solo hay un Firebird de 32 bits instalado, PHP no carga `pdo_firebird`.
+
 - **El archivo `.FDB` lo abre solo el servidor de su versión o una más nueva** (estructura ODS):
 
   | Servidor | ODS que crea | Abre archivos de |
@@ -84,7 +100,10 @@ La app no depende de la versión del servidor: PHP habla con Firebird a través 
 
   Si aparece `unsupported on-disk structure`, la copia se hizo con otra versión: se restaura desde el respaldo
   `.fbk` con el `gbak` del servidor que la va a abrir. El `.fbk` sí sirve entre versiones.
+
 - Puerto **3050** abierto en el servidor de Firebird.
+
+<br>
 
 ### Restaurar la copia de Microsip
 
@@ -95,6 +114,8 @@ $env:ISC_USER = "SYSDBA"; $env:ISC_PASSWORD = "<contraseña>"
 & "C:\Program Files\Firebird\Firebird_5_0\gbak.exe" -c -v "C:\Microsip datos\Respaldos\microsip.fbk" "C:\Microsip datos\ACEROS EL AGUILA.FDB"
 ```
 
+<br>
+
 ### Alias (opcional, recomendado)
 
 Para no depender de la ruta con espacios, en `databases.conf` del servidor Firebird:
@@ -104,6 +125,8 @@ aa_microsip = C:\Microsip datos\ACEROS EL AGUILA.FDB
 ```
 
 y en el `.env`: `DB_FIREBIRD_DATABASE=aa_microsip`. Reiniciar el servicio de Firebird tras editarlo.
+
+<br>
 
 ### Usuario dedicado con permisos mínimos
 
@@ -131,6 +154,10 @@ GRANT UPDATE (ENTREGADO) ON LIBRES_VTA_PV TO USER AA_APP;
 
 Probar en la copia que los triggers de esa tabla no fallen con este usuario antes de llevarlo al servidor.
 
+---
+
+<br>
+
 ## 5. Registrar PHP en IIS
 
 En PowerShell como administrador:
@@ -142,6 +169,10 @@ $appcmd = "$env:windir\system32\inetsrv\appcmd.exe"
 & $appcmd set config /section:system.webServer/fastCgi /+"[fullPath='C:\php\php-cgi.exe'].environmentVariables.[name='PHP_FCGI_MAX_REQUESTS',value='10000']"
 & $appcmd set config /section:system.webServer/handlers /+"[name='PHP_via_FastCGI',path='*.php',verb='*',modules='FastCgiModule',scriptProcessor='C:\php\php-cgi.exe',resourceType='Either']"
 ```
+
+---
+
+<br>
 
 ## 6. Sitio y grupo de aplicaciones
 
@@ -167,6 +198,10 @@ Las evidencias (fotos y acuses) van en `storage\app\private`, fuera de `public\`
 
 El `web.config` de Laravel ya está en el repositorio (`public/web.config`): reglas de URL Rewrite, límite de subida
 de 30 MB y errores de Laravel sin reemplazo de IIS.
+
+---
+
+<br>
 
 ## 7. Configurar la app
 
@@ -216,14 +251,21 @@ o el administrador) da de alta como EN EXPERTOS cada traspaso capturado en Micro
 (`SISTEMA_ORIGEN` = IN) con el concepto `AA_CONCEPTOS_TRASPASO` (por defecto 223048 = TRASPASO DE SALIDA), desde
 `AA_TRASPASOS_DESDE`. Como no traen destino, quedan en la sucursal `AA_SUCURSAL_TRASPASOS_MICROSIP` (por defecto
 `PASO DEL TORO`), que debe llamarse igual que la del cajero. Los resurtidos que genera Expertos no entran.
+
 Un traspaso de Expertos se puede dar de alta a mano por consola:
 `php artisan aa:importar-traspaso TSA013341 --partida=1` (opciones `--cliente=` y `--sucursal=`).
+
 Las sucursales que se asignan a Cajero y Sucursal en *Usuarios* son los almacenes de Microsip (`ALMACENES`), sin los
 de `AA_ALMACENES_NO_SUCURSAL` (por defecto CEDIS, materia prima, producción y los de tránsito). Requiere el
 `GRANT SELECT ON ALMACENES` de arriba.
+
 Con `AA_ORIGEN=firebird`, `db:seed` solo crea los usuarios; los pedidos demo se siembran únicamente en modo `demo`.
 
 Después de cambiar el `.env` con la caché activa: `php artisan config:clear` (o volver a `config:cache`).
+
+---
+
+<br>
 
 ## 8. Tareas programadas
 
@@ -236,6 +278,10 @@ $disparo = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (Ne
 Register-ScheduledTask -TaskName "aa schedule:run" -Action $accion -Trigger $disparo -User "SYSTEM" -RunLevel Highest
 ```
 
+---
+
+<br>
+
 ## 9. Acceso desde celulares de la red local
 
 ```powershell
@@ -245,18 +291,29 @@ New-NetFirewallRule -DisplayName "aa IIS 8080" -Direction Inbound -Protocol TCP 
 Abrir `http://<IP del equipo>:8080` desde el celular en la misma red. La cámara del navegador puede exigir HTTPS;
 en ese caso agregar un enlace `https` al sitio con un certificado de prueba.
 
+---
+
+<br>
+
 ## 10. Servidor del cliente
 
 Mismos pasos 2 a 8. Además, antes del despliegue (S7):
 
 - Confirmar que el servidor alcanza el Firebird de Microsip: `Test-NetConnection <servidor Microsip> -Port 3050`
   (directo o por VPN) y `php artisan aa:firebird` con el usuario `AA_APP`.
+
 - `APP_ENV=production`, `APP_DEBUG=false`, `AA_DEMO=false`, `AA_DISPOSITIVOS=true`.
+
 - Los seeders de prueba no corren en producción (se saltan solos). El primer administrador se crea con
   `php artisan aa:crear-admin <usuario> --nombre="Nombre"` (pide la contraseña sin mostrarla); el resto de los
   usuarios se dan de alta en **Usuarios** dentro de la app.
+
 - Las sucursales de los usuarios deben llamarse igual que el destino del traspaso en Expertos (`PASO DEL TORO`,
   `ISLA`…), o Cajero y Sucursal no verán sus pedidos.
+
+---
+
+<br>
 
 ## Problemas comunes
 
