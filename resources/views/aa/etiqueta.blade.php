@@ -14,12 +14,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Etiqueta {{ $pedido->folio }}</title>
     <style>
-        @page { size: 100mm 150mm; margin: 0; }
+        /* Etiqueta térmica 4×6 pulgadas (101.6 × 152.4 mm). */
+        @page { size: 4in 6in; margin: 0; }
         * { box-sizing: border-box; }
         html, body { margin: 0; background: #e5e7eb; font-family: "Source Sans 3", Arial, sans-serif; color: #111; }
         .barra { display: flex; gap: 8px; justify-content: center; padding: 12px; }
         .barra button { font: 600 15px Arial, sans-serif; padding: 8px 16px; border: 0; border-radius: 6px; background: #f97316; color: #fff; cursor: pointer; }
-        .etiqueta { width: 100mm; height: 150mm; margin: 0 auto 24px; padding: 4mm; background: #fff; display: flex; flex-direction: column; gap: 2mm; overflow: hidden; border: 1px solid #111; }
+        .etiqueta { width: 4in; height: 6in; margin: 0 auto 24px; padding: 4mm; background: #fff; display: flex; flex-direction: column; gap: 2mm; overflow: hidden; border: 1px solid #111; }
         .marca { display: flex; justify-content: space-between; align-items: center; gap: 3mm; border-bottom: 2px solid #111; padding-bottom: 1mm; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
         .marca img { height: 14mm; width: auto; max-width: 56mm; display: block; }
         .denso .marca img { height: 11mm; }

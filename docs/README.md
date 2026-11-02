@@ -133,7 +133,7 @@ La integración con Firebird no tiene prueba automática a propósito: se prueba
 | S2 | Usuarios, roles y sucursal | ✅ Alta y edición desde *Usuarios* |
 | S3 | Evidencias privadas y purga a 2 años | ✅ |
 | S3 | Compresión de fotos | ❌ Pendiente (GD ya activo en PHP) |
-| S3 | Etiqueta con tamaño real | ⏳ Hoy 10×15 cm; falta el tamaño y diseño del cliente |
+| S3 | Etiqueta con tamaño real | ✅ 4×6 in (101.6 × 152.4 mm), verificada a PDF con 11 medidas en una hoja; falta probar en la impresora real |
 | S3 | Código de barras, producción en 3 pasos, modo balanza, ±5 % | ✅ |
 | S4 | Marcar la venta como entregada en la copia, con reintento | ✅ |
 | S4 | Usuario Firebird de permisos mínimos | ❌ Pendiente: hoy conecta como SYSDBA. `GRANT` exactos en `iis.md` |
