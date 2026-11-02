@@ -40,7 +40,6 @@
         .denso td, .denso th { padding-top: 0; padding-bottom: 0; }
         .denso .cliente { font-size: 13px; }
         .denso .folio { font-size: 34px; }
-        .notas { font-size: 10px; line-height: 1.2; overflow-wrap: anywhere; }
         .pie { margin-top: auto; display: flex; justify-content: space-between; gap: 3mm; border-top: 1px solid #111; padding-top: 1mm; font-size: 10px; }
         @media print {
             html, body { background: #fff; }
@@ -97,9 +96,6 @@
         <div class="dato">
             <b>Destino:</b> {{ $pedido->forma_entrega?->label() ?? 'Sin definir' }} · {{ $pedido->sucursal }}
         </div>
-        @if ($pedido->instrucciones)
-            <div class="notas"><b>Notas:</b> {{ $pedido->instrucciones }}</div>
-        @endif
 
         <div class="pie">
             <span>Elaboró: {{ $elaboro }}</span>
