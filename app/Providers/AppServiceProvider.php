@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Contracts\TraspasosExpertos;
+use App\Contracts\UsuariosMicrosip;
 use App\Contracts\VentasMicrosip;
 use App\Http\Middleware\DispositivoAutorizado;
 use Livewire\Livewire;
@@ -20,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(VentasMicrosip::class, $demo ? \App\Services\Demo\DemoVentas::class : \App\Services\Firebird\FirebirdVentas::class);
         $this->app->bind(TraspasosExpertos::class, $demo ? \App\Services\Demo\DemoTraspasos::class : \App\Services\Firebird\FirebirdTraspasos::class);
+        // Solo se usa con aa.login_microsip; en demo se entra con las contraseñas de la app.
+        $this->app->bind(UsuariosMicrosip::class, \App\Services\Firebird\FirebirdUsuarios::class);
     }
 
     /**

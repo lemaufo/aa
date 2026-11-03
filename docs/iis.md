@@ -152,6 +152,17 @@ GRANT SELECT ON LIBRES_VTA_PV TO USER AA_APP;
 GRANT UPDATE (ENTREGADO) ON LIBRES_VTA_PV TO USER AA_APP;
 ```
 
+Y en el catálogo de usuarios de Microsip (`System\CONFIG.FDB`, conexión `microsip_config`), para el acceso:
+
+```sql
+GRANT SELECT ON USUARIOS TO USER AA_APP;
+GRANT SELECT ON EMPRESAS TO USER AA_APP;
+GRANT SELECT ON EMPRESAS_USUARIOS TO USER AA_APP;
+```
+
+Las contraseñas no se leen de ninguna tabla: la app abre una conexión de un solo uso a Firebird con el usuario y la
+contraseña que se teclean en el login, igual que Microsip. No hace falta ningún permiso extra para eso.
+
 Probar en la copia que los triggers de esa tabla no fallen con este usuario antes de llevarlo al servidor.
 
 ---
@@ -304,9 +315,11 @@ Mismos pasos 2 a 8. Además, antes del despliegue (S7):
 
 - `APP_ENV=production`, `APP_DEBUG=false`, `AA_DEMO=false`, `AA_DISPOSITIVOS=true`.
 
-- Los seeders de prueba no corren en producción (se saltan solos). El primer administrador se crea con
-  `php artisan aa:crear-admin <usuario> --nombre="Nombre"` (pide la contraseña sin mostrarla); el resto de los
-  usuarios se dan de alta en **Usuarios** dentro de la app.
+- Los seeders de prueba no corren en producción (se saltan solos). Se entra con los usuarios de Microsip: el
+  primero es **SYSDBA** con su contraseña de Microsip (entra siempre como administrador) y en **Usuarios → Asignar
+  usuario de Microsip** se les da rol y sucursal a los demás. Revisar `DB_FIREBIRD_CONFIG_DATABASE` (ruta de
+  `System\CONFIG.FDB` en el servidor) y `AA_EMPRESA_MICROSIP` (nombre corto de la empresa en Microsip).
+  `aa:crear-admin` solo sirve en modo demo, con contraseñas de la app.
 
 - Las sucursales de los usuarios deben llamarse igual que el destino del traspaso en Expertos (`PASO DEL TORO`,
   `ISLA`…), o Cajero y Sucursal no verán sus pedidos.

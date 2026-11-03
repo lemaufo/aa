@@ -18,6 +18,10 @@ class User extends Authenticatable
         'username',
         'rol',
         'sucursal',
+        'microsip_usuario_id',
+        'microsip_rol',
+        'microsip_activo',
+        'microsip_sync_at',
         'email',
         'password',
     ];
@@ -33,7 +37,26 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'rol' => Rol::class,
+            'microsip_activo' => 'boolean',
+            'microsip_sync_at' => 'datetime',
         ];
+    }
+
+    /** SYSDBA es el supervisor de Microsip: siempre administrador de la app. */
+    public function esSysdba(): bool
+    {
+        return $this->username === 'sysdba';
+    }
+
+    /** Guarda lo que dice Microsip del usuario (catálogo de CONFIG.FDB). */
+    public function sincronizarMicrosip(array $datos): void
+    {
+        $this->forceFill([
+            'microsip_usuario_id' => $datos['id'],
+            'microsip_rol' => $datos['rol'],
+            'microsip_activo' => $datos['activo'],
+            'microsip_sync_at' => now(),
+        ]);
     }
 
     public function initials(): string

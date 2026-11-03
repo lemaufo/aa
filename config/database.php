@@ -129,6 +129,22 @@ return [
             'role' => env('DB_FIREBIRD_ROLE'),
             'prefix' => '',
         ],
+
+        /*
+        | Catálogo de usuarios de Microsip (System\CONFIG.FDB, tabla USUARIOS), en el mismo servidor Firebird.
+        | Solo lectura: la app consulta qué usuarios existen, su rol de Microsip y si están activos.
+        */
+        'microsip_config' => [
+            'driver' => 'firebird',
+            'host' => env('DB_FIREBIRD_HOST', '127.0.0.1'),
+            'port' => env('DB_FIREBIRD_PORT', '3050'),
+            'database' => env('DB_FIREBIRD_CONFIG_DATABASE', 'C:/Microsip datos/System/CONFIG.FDB'),
+            'username' => env('DB_FIREBIRD_USERNAME', 'SYSDBA'),
+            'password' => env('DB_FIREBIRD_PASSWORD', 'masterkey'),
+            'charset' => env('DB_FIREBIRD_CHARSET', 'UTF8'),
+            'role' => env('DB_FIREBIRD_ROLE'),
+            'prefix' => '',
+        ],
     ],
 
     /*

@@ -16,6 +16,28 @@ return [
     'origen' => env('AA_ORIGEN', 'firebird'),
 
     /*
+    | Acceso con los usuarios de Microsip. Con origen firebird se entra con el usuario y la contraseña de
+    | Microsip (se validan contra el servidor Firebird) y solo si el administrador le asignó un rol en la app.
+    | En demo (y en las pruebas) se entra con las contraseñas guardadas en la app.
+    */
+    'login_microsip' => (bool) env('AA_LOGIN_MICROSIP', env('AA_ORIGEN', 'firebird') === 'firebird'),
+
+    /* Empresa de Microsip (CONFIG.FDB, EMPRESAS.NOMBRE_CORTO) a la que deben tener acceso los usuarios. */
+    'empresa_microsip' => env('AA_EMPRESA_MICROSIP', 'ACEROS EL AGUILA'),
+
+    /*
+    | Rol de la app que se sugiere al asignar un usuario según su rol en Microsip (USUARIOS.TIPO = 'R').
+    | Solo es la sugerencia: el rol que manda es el que guarda el administrador en la app.
+    */
+    'roles_microsip' => [
+        'CAJERO' => 'cajero',
+        'PRODUCCION' => 'produccion',
+        'CEDIS' => 'cedis',
+        'ALMACEN' => 'cedis',
+        'SUCURSAL' => 'sucursal',
+    ],
+
+    /*
     | Conceptos de Microsip Inventarios (CONCEPTOS_IN.CONCEPTO_IN_ID) que cuentan como traspaso cuando el folio
     | no está en AdminExpertos. 223048 = TRASPASO DE SALIDA. Varios separados por coma; vacío = solo Expertos.
     */
@@ -72,7 +94,7 @@ return [
     | Usuarios de prueba (se crean con el seeder). El acceso es por nombre de usuario, no por correo.
     */
     'usuarios' => [
-        ['name' => 'Administrador', 'username' => 'admin', 'password' => 'Admin#AA26', 'rol' => 'admin', 'sucursal' => null],
+        ['name' => 'SYSDBA', 'username' => 'sysdba', 'password' => 'Admin#AA26', 'rol' => 'admin', 'sucursal' => null],
         ['name' => 'Cajero Centro', 'username' => 'cajero', 'password' => 'Caja#AA26', 'rol' => 'cajero', 'sucursal' => 'Sucursal Centro'],
         ['name' => 'Producción Planta', 'username' => 'produccion', 'password' => 'Prod#AA26', 'rol' => 'produccion', 'sucursal' => null],
         ['name' => 'Operador CEDIS', 'username' => 'cedis', 'password' => 'Cedis#AA26', 'rol' => 'cedis', 'sucursal' => null],

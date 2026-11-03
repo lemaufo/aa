@@ -116,9 +116,14 @@ Solo ves los pedidos de tu sucursal.
 
 - Puede hacer **cualquier paso** del flujo, de cualquier sucursal.
 
-- **Usuarios**: *Nuevo usuario* o *Editar*. Usuario sin espacios, rol, sucursal (obligatoria para Cajero y
-  Sucursal) y contraseña de mínimo 8. Al editar, la contraseña vacía conserva la actual. No puedes quitarte tu
-  propio rol de administrador. Abajo está la matriz de **quién puede hacer qué**.
+- **Usuarios**: todos entran con su **usuario y contraseña de Microsip**; el administrador es **SYSDBA**.
+  - *Asignar usuario de Microsip*: elige un usuario de Microsip que todavía no esté en la app. La app sugiere el
+    rol según su rol en Microsip (por ejemplo `CAJERO` → Cajero); elige el rol de la app y la sucursal
+    (obligatoria para Cajero y Sucursal). No se captura contraseña: es la de Microsip.
+  - Los usuarios nuevos y los cambios de contraseña se hacen **en Microsip**. Si a alguien se le da de baja en
+    Microsip, ya no entra a la app; *Actualizar desde Microsip* lo marca enseguida (también se revisa en cada acceso).
+  - *Editar* cambia nombre, rol y sucursal. SYSDBA siempre es administrador y nadie puede quitarse su propio rol.
+  - Abajo está la matriz de **quién puede hacer qué**.
 
 - **Artículos**: el catálogo de Microsip en vivo, solo de consulta. Busca por nombre o clave (no importan
   acentos ni mayúsculas), filtra por estatus y pulsa un artículo para ver sus unidades, peso, todas sus claves y

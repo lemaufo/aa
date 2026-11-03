@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\AccesoMicrosip;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -28,9 +29,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
 
         $this->ensureIsNotRateLimited();
 
-        $credenciales = ['username' => Str::lower(trim($this->username)), 'password' => $this->password];
-
-        if (! Auth::attempt($credenciales, $this->remember)) {
+        if (! $this->entrar()) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -42,6 +41,28 @@ new #[Layout('components.layouts.auth')] class extends Component {
         Session::regenerate();
 
         $this->redirectIntended(default: route('inicio', absolute: false), navigate: true);
+    }
+
+    /** Con Microsip, usuario y contraseña de Microsip; en demo, los de la app. */
+    protected function entrar(): bool
+    {
+        if (! config('aa.login_microsip')) {
+            return Auth::attempt(['username' => Str::lower(trim($this->username)), 'password' => $this->password], $this->remember);
+        }
+
+        try {
+            $user = app(AccesoMicrosip::class)->autenticar($this->username, $this->password);
+        } catch (DomainException $e) {
+            throw ValidationException::withMessages(['username' => $e->getMessage()]);
+        }
+
+        if ($user === null) {
+            return false;
+        }
+
+        Auth::login($user, $this->remember);
+
+        return true;
     }
 
     protected function ensureIsNotRateLimited(): void
@@ -68,7 +89,9 @@ new #[Layout('components.layouts.auth')] class extends Component {
 <div class="grid gap-8">
     <header class="grid gap-2">
         <h1 class="font-display text-[44px] font-semibold leading-none">Entrar</h1>
-        <p class="text-acero">Usa tu nombre de usuario y tu contraseña.</p>
+        <p class="text-acero">
+            {{ config('aa.login_microsip') ? 'Usa tu usuario y tu contraseña de Microsip.' : 'Usa tu nombre de usuario y tu contraseña.' }}
+        </p>
     </header>
 
     <form wire:submit="login" class="grid gap-5">
@@ -103,7 +126,8 @@ new #[Layout('components.layouts.auth')] class extends Component {
         </button>
     </form>
 
-    @if (config('aa.demo'))
+    {{-- Los usuarios de prueba solo sirven sin Microsip: con Microsip las contraseñas son las suyas. --}}
+    @if (config('aa.demo') && ! config('aa.login_microsip'))
         <section class="grid gap-3 border-t border-linea pt-6" aria-labelledby="demo-titulo">
             <div>
                 <h2 id="demo-titulo" class="font-display text-xl font-semibold">Usuarios de prueba</h2>

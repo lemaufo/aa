@@ -36,6 +36,13 @@ Microsip PV (ticket) ─────┼─ lectura (Firebird) ────┤
 
   Se lee para ventas, traspasos y cancelaciones; se escribe solo `LIBRES_VTA_PV.ENTREGADO`. No se modifica el esquema de Microsip.
 
+- **Usuarios de Microsip** (conexión `microsip_config`, `System\CONFIG.FDB`, tabla `USUARIOS`): con
+  `AA_LOGIN_MICROSIP` (encendido con origen `firebird`) se entra con el usuario y la contraseña de Microsip. La
+  contraseña la valida el servidor Firebird abriendo una conexión con ella, igual que Microsip; además el usuario
+  debe estar activo en Microsip, con acceso a la empresa (`AA_EMPRESA_MICROSIP`) y asignado en la app con un rol.
+  En MySQL se guarda su id, su rol de Microsip, si está activo, la última revisión y, cifrada, la última contraseña
+  que funcionó: solo se usa si Firebird no contesta, y solo para quien ya entró antes. SYSDBA es el administrador.
+
 - **`AA_ORIGEN`** (`config/aa.php`): `firebird` (por defecto) o `demo` (tablas `demo_ventas` y `demo_traspasos` en MySQL, sin Microsip). Las pruebas automáticas siempre corren en `demo`.
 
 <br>
@@ -48,6 +55,7 @@ Microsip PV (ticket) ─────┼─ lectura (Firebird) ────┤
 | Aplicar una acción con bitácora y transacción; reintento de venta; cancelaciones | `app/Services/FlujoService.php` |
 | Validación del ticket contra el traspaso | `app/Services/ValidadorTicket.php` |
 | Alta de pedido desde un traspaso de Expertos o Microsip | `app/Services/AltaPedido.php` |
+| Acceso con usuarios de Microsip | `app/Services/AccesoMicrosip.php`, `app/Services/Firebird/FirebirdUsuarios.php` |
 | Contratos con Microsip / Expertos | `app/Contracts/VentasMicrosip.php`, `TraspasosExpertos.php` |
 | Implementación real (Firebird) | `app/Services/Firebird/FirebirdVentas.php`, `FirebirdTraspasos.php`, `Microsip.php` |
 | Catálogo de artículos (solo lectura, pantalla *Artículos* del administrador) | `app/Services/Firebird/FirebirdArticulos.php`, `resources/views/livewire/aa/articulos.blade.php` |
@@ -68,7 +76,7 @@ Microsip PV (ticket) ─────┼─ lectura (Firebird) ────┤
 | `php artisan aa:importar-traspaso FOLIO --partida=1` | Da de alta a mano un traspaso (de Expertos o Microsip), a nombre del administrador |
 | `php artisan aa:sincronizar-cancelaciones` | Cancela los pedidos EN EXPERTOS cuyo traspaso se canceló en Expertos (programado cada 5 min) |
 | `php artisan aa:purgar-evidencias` | Borra fotos y acuses de más de 2 años; el pedido se conserva (programado a las 3:00) |
-| `php artisan aa:crear-admin USUARIO` | Crea el primer administrador o le cambia la contraseña (en producción no corren los seeders) |
+| `php artisan aa:crear-admin USUARIO` | Solo en modo demo: crea un administrador con contraseña de la app. Con Microsip el administrador es SYSDBA |
 | `php artisan aa:dispositivo-codigo` | Código de un solo uso para autorizar un equipo |
 
 ---
@@ -84,7 +92,7 @@ php artisan serve                 # o el sitio de IIS (docs/iis.md)
 php artisan test                  # pruebas automáticas (Pest), siempre con AA_ORIGEN=demo
 ```
 
-Usuarios de prueba (solo local; `UsuarioSeeder` no corre en producción): `admin`, `cajero`, `produccion`, `cedis`, `sucursal`, `consulta`.
+Usuarios de prueba (solo local; `UsuarioSeeder` no corre en producción; solo sirven con `AA_LOGIN_MICROSIP=false`): `sysdba`, `cajero`, `produccion`, `cedis`, `sucursal`, `consulta`.
 
 Contraseñas en `config/aa.php`.
 
@@ -99,6 +107,7 @@ Contraseñas en `config/aa.php`.
 | `FlujoTest.php` | Transiciones y permisos del flujo, pedido de punta a punta, reintento de venta, cancelación solo EN EXPERTOS |
 | `ValidadorTicketTest.php` | Ticket válido y cada motivo de rechazo |
 | `ProduccionYEntregaTest.php` | Tolerancia de peso ±5 % en el límite, fotos de producción y acuse obligatorio |
+| `AccesoMicrosipTest.php` | Acceso con usuarios de Microsip (simulado): rol asignado, contraseña mala, sin asignar, baja, SYSDBA, Firebird caído; asignar y sincronizar en *Usuarios* |
 | `VistasPorRolTest.php` | Cada pantalla con el rol que la usa y con uno que no debe verla; alta y edición de usuarios |
 | `Unit/MicrosipFolioTest.php` | Normalización de folios de Microsip (`tba74886` → `TBA074886`) |
 
