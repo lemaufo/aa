@@ -23,7 +23,7 @@ new #[Title('Equipos autorizados')] class extends Component {
 
     public function generar(): void
     {
-        $this->validate(['nombre' => ['required', 'string', 'max:80']], [], ['nombre' => 'nombre del equipo']);
+        $this->validate(['nombre' => ['required', 'string', 'max:80']]);
 
         $this->codigoNuevo = Dispositivo::generarCodigo(trim($this->nombre));
         $this->nombre = '';

@@ -29,7 +29,7 @@ new class extends Component {
 
     public function entregar(FlujoService $flujo): void
     {
-        $this->validate($this->reglasAcuse() + ['codigo' => ['required', 'string', 'max:60']], [], $this->atributosAcuse() + ['codigo' => 'código de la etiqueta']);
+        $this->validate($this->reglasAcuse() + ['codigo' => ['required', 'string', 'max:60']], [], ['codigo' => 'el código de la etiqueta']);
 
         if (strcasecmp(trim($this->codigo), $this->pedido->folio) !== 0) {
             $this->addError('codigo', 'Ese código no es de este pedido. El folio es '.$this->pedido->folio.'.');

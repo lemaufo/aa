@@ -56,6 +56,7 @@ extension=mbstring
 extension=openssl
 extension=fileinfo
 extension=gd
+extension=exif
 extension=curl
 extension=zip
 
@@ -75,7 +76,7 @@ cgi.fix_pathinfo = 1
 fastcgi.impersonate = 1
 ```
 
-3. Comprobar: `php -m` debe listar `PDO_Firebird`, `pdo_mysql`, `mbstring`, `openssl`, `fileinfo` y `gd`.
+3. Comprobar: `php -m` debe listar `PDO_Firebird`, `pdo_mysql`, `mbstring`, `openssl`, `fileinfo`, `gd` y `exif`.
 
 ---
 
@@ -206,6 +207,8 @@ icacls "C:\Laravel\aa\bootstrap\cache" /grant "IIS AppPool\aa:(OI)(CI)M" /T
 ```
 
 Las evidencias (fotos y acuses) van en `storage\app\private`, fuera de `public\`; nunca se sirven directo por IIS.
+Al guardarlas se reducen a 1600 px y se recomprimen en JPEG (unos 300 KB por foto): `gd` es obligatoria y `exif`
+endereza las fotos que el celular guarda acostadas. Se borran a los 2 años con `aa:purgar-evidencias` (tarea programada).
 
 El `web.config` de Laravel ya está en el repositorio (`public/web.config`): reglas de URL Rewrite, límite de subida
 de 30 MB y errores de Laravel sin reemplazo de IIS.

@@ -36,7 +36,7 @@ new class extends Component {
             $reglas['repartidor_ok'] = ['accepted'];
         }
 
-        $this->validate($reglas, [], $this->atributosAcuse() + ['repartidor_ok' => 'confirmación del repartidor']);
+        $this->validate($reglas);
 
         $nombre = trim($this->recibe_nombre);
         $cambios = ['recibe_nombre' => $nombre, 'acuse_path' => $this->guardarAcuse($this->pedido)];

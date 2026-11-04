@@ -16,6 +16,9 @@ class Pedido extends Model
 {
     protected $guarded = [];
 
+    /** El traspaso de Expertos no trae cliente: se guarda este texto hasta que la caja lo captura al ligar la venta. */
+    public const CLIENTE_POR_CAPTURAR = 'Por capturar en caja';
+
     /** Movimientos de la bitácora que el cliente no debe ver al rastrear su pedido. */
     public const EVENTOS_INTERNOS = [
         'Etiqueta impresa',

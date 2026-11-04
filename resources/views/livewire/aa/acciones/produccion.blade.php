@@ -2,6 +2,7 @@
 
 use App\Models\Pedido;
 use App\Services\FlujoService;
+use App\Support\Evidencia;
 use App\Support\Flujo;
 use Illuminate\Auth\Access\AuthorizationException;
 use Livewire\Volt\Component;
@@ -71,7 +72,7 @@ new class extends Component {
         $this->validate([
             'peso_produccion' => ['required', 'numeric', 'min:0.1', 'max:99999'],
             'lote_rollo' => ['nullable', 'string', 'max:60'],
-        ], [], ['peso_produccion' => 'peso de la báscula', 'lote_rollo' => 'rollo o lote']);
+        ]);
 
         if (! $this->dentro()) {
             $this->addError('peso_produccion', 'El peso está fuera de la tolerancia de ±'.config('aa.tolerancia_peso').' %. Revisa piezas y medidas contra la etiqueta y vuelve a pesar.');
@@ -91,15 +92,13 @@ new class extends Component {
     public function terminar(FlujoService $flujo): void
     {
         $this->validate([
-            'foto_producto' => ['required', 'image', 'max:10240'],
-            'foto_bascula' => ['required', 'image', 'max:10240'],
-        ], [], ['foto_producto' => 'foto del producto terminado', 'foto_bascula' => 'foto de la báscula']);
-
-        $carpeta = 'evidencias/'.$this->pedido->id;
+            'foto_producto' => Evidencia::reglas(),
+            'foto_bascula' => Evidencia::reglas(),
+        ]);
 
         $this->ejecutar($flujo, 'producir', [
-            'evidencia_path' => $this->foto_producto->store($carpeta, 'local'),
-            'evidencia_bascula_path' => $this->foto_bascula->store($carpeta, 'local'),
+            'evidencia_path' => Evidencia::guardar($this->foto_producto, $this->pedido, 'producto'),
+            'evidencia_bascula_path' => Evidencia::guardar($this->foto_bascula, $this->pedido, 'bascula'),
             'peso_teorico' => $this->pedido->pesoTeorico(),
         ], 'Fotos del producto con etiqueta y de la báscula', 'Producción terminada. Despáchalo a CEDIS.');
     }

@@ -95,7 +95,7 @@ class AltaPedido
                 'folio' => $traspaso['folio'],
                 'estatus' => Estatus::EnExpertos,
                 'sucursal' => $user?->rol->limitadoASuSucursal() ? $user->sucursal : ($sucursal ?: ($traspaso['destino'] ?? 'Sin sucursal')),
-                'cliente' => trim((string) $cliente) ?: 'Por capturar en caja',
+                'cliente' => trim((string) $cliente) ?: Pedido::CLIENTE_POR_CAPTURAR,
                 'material' => $linea['articulo'],
                 'metros_traspaso' => $linea['cantidad'],
                 'peso_por_metro' => $linea['peso_unitario'],

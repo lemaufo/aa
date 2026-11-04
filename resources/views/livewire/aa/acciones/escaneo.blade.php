@@ -54,7 +54,7 @@ new class extends Component {
 
     public function confirmar(FlujoService $flujo): void
     {
-        $this->validate(['codigo' => ['required', 'string', 'max:60']], [], ['codigo' => 'código de la etiqueta']);
+        $this->validate(['codigo' => ['required', 'string', 'max:60']], [], ['codigo' => 'el código de la etiqueta']);
 
         if (strcasecmp(trim($this->codigo), $this->pedido->folio) !== 0) {
             $this->addError('codigo', 'Ese código no es de este pedido. El folio es '.$this->pedido->folio.'.');

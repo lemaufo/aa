@@ -36,10 +36,7 @@ new class extends Component {
         $this->validate([
             'codigo' => ['required', 'string', 'max:60'],
             'ubicacion_cedis' => [$this->recogeEnCedis() ? 'required' : 'nullable', 'string', 'max:80'],
-        ], [], [
-            'codigo' => 'código de la etiqueta',
-            'ubicacion_cedis' => 'zona del patio',
-        ]);
+        ], [], ['codigo' => 'el código de la etiqueta']);
 
         if (strcasecmp(trim($this->codigo), $this->pedido->folio) !== 0) {
             $this->addError('codigo', 'Ese código no es de este pedido. El folio es '.$this->pedido->folio.'.');

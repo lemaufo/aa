@@ -15,7 +15,7 @@ class DispositivoController extends Controller
 
     public function activar(Request $request)
     {
-        $request->validate(['codigo' => ['required', 'string', 'max:20']], [], ['codigo' => 'código']);
+        $request->validate(['codigo' => ['required', 'string', 'max:20']]);
 
         $llave = 'dispositivo:'.$request->ip();
         if (RateLimiter::tooManyAttempts($llave, 5)) {

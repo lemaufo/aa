@@ -169,7 +169,7 @@ new #[Title('Usuarios y permisos')] class extends Component {
             'rol' => ['required', Rule::enum(Rol::class)],
             'sucursal' => [Rule::requiredIf($this->limitado()), 'nullable', 'string', 'max:120'],
             'password' => [$this->editando ? 'nullable' : 'required', 'string', 'min:8', 'max:72'],
-        ], [], ['name' => 'nombre', 'username' => 'usuario', 'rol' => 'rol', 'sucursal' => 'sucursal', 'password' => 'contraseña']);
+        ]);
 
         // Nunca dejar el sistema sin administrador: el admin no se quita su propio rol.
         if ($this->editando === auth()->id() && $datos['rol'] !== Rol::Admin->value) {
@@ -206,7 +206,7 @@ new #[Title('Usuarios y permisos')] class extends Component {
             'name' => ['required', 'string', 'max:120'],
             'rol' => ['required', Rule::enum(Rol::class)],
             'sucursal' => [Rule::requiredIf($this->limitado()), 'nullable', 'string', 'max:120'],
-        ], [], ['name' => 'nombre', 'rol' => 'rol', 'sucursal' => 'sucursal']);
+        ]);
 
         $u = $nuevo ? new User(['username' => strtolower($m['usuario'])]) : User::findOrFail($this->editando);
 

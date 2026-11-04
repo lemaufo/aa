@@ -24,6 +24,7 @@
         <env name="AA_DEMO_FALLA_MICROSIP" value="false"/>
         <env name="AA_DISPOSITIVOS" value="false"/>
         <env name="APP_TIMEZONE" value="America/Mexico_City"/>
+        <env name="APP_LOCALE" value="es"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>

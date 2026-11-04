@@ -51,13 +51,6 @@ new class extends Component {
             'direccion_entrega' => [Rule::requiredIf($this->aDomicilio()), 'nullable', 'string', 'max:255'],
             'gps_link' => ['nullable', 'url', 'max:255'],
             'password' => ['required', 'string'],
-        ], [], [
-            'forma_entrega' => 'forma de entrega',
-            'telefono' => 'teléfono',
-            'recibe_nombre' => 'persona que recibe',
-            'direccion_entrega' => 'dirección',
-            'gps_link' => 'enlace de ubicación',
-            'password' => 'contraseña',
         ]);
 
         $llave = 'cambiar-entrega:'.auth()->id();

@@ -68,12 +68,6 @@ trait ManejaCortes
         ];
     }
 
-    /** @return array<string, string> */
-    protected function atributosCortes(): array
-    {
-        return ['cortes' => 'piezas y medidas', 'cortes.*.piezas' => 'piezas', 'cortes.*.medida' => 'medida'];
-    }
-
     /** @return list<array{piezas: int, medida: float}> */
     protected function cortesLimpios(): array
     {

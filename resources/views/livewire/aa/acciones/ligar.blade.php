@@ -39,7 +39,8 @@ new class extends Component {
     public function mount(Pedido $pedido): void
     {
         $this->pedido = $pedido;
-        $this->cliente = $pedido->cliente;
+        // Sin cliente todavía, el campo sale vacío para capturarlo (no con el texto de relleno).
+        $this->cliente = $pedido->cliente === Pedido::CLIENTE_POR_CAPTURAR ? '' : (string) $pedido->cliente;
         $this->telefono = (string) $pedido->telefono;
         $this->forma_entrega = $pedido->forma_entrega?->value ?? '';
         $this->fecha_prometida = $pedido->fecha_prometida?->toDateString() ?? '';
@@ -74,16 +75,7 @@ new class extends Component {
             'recibe_nombre' => [Rule::requiredIf($this->aDomicilio()), 'nullable', 'string', 'max:120'],
             'direccion_entrega' => [Rule::requiredIf($this->aDomicilio()), 'nullable', 'string', 'max:255'],
             'gps_link' => ['nullable', 'url', 'max:255'],
-        ] + $this->reglasCortes(), [], [
-            'folio_venta' => 'folio del ticket',
-            'cliente' => 'cliente',
-            'telefono' => 'teléfono',
-            'forma_entrega' => 'forma de entrega',
-            'fecha_prometida' => 'fecha prometida',
-            'recibe_nombre' => 'persona que recibe',
-            'direccion_entrega' => 'dirección',
-            'gps_link' => 'enlace de ubicación',
-        ] + $this->atributosCortes());
+        ] + $this->reglasCortes());
 
         if (! $this->cuadraConTraspaso($this->pedido->metros_traspaso)) {
             return;
@@ -163,7 +155,7 @@ new class extends Component {
             </div>
 
             <x-aa.campo label="Cliente" for="cliente" :error="$errors->first('cliente')">
-                <input id="cliente" type="text" wire:model="cliente" class="input" autocomplete="off"
+                <input id="cliente" type="text" wire:model="cliente" class="input" placeholder="Nombre o razón social" autocomplete="off"
                        @error('cliente') aria-invalid="true" @enderror>
             </x-aa.campo>
         </div>

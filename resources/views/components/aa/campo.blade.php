@@ -1,6 +1,6 @@
 @props(['label', 'for' => null, 'error' => null, 'ayuda' => null])
 
-<div {{ $attributes->class('grid gap-1.5') }}>
+<div {{ $attributes->class('grid content-start gap-1.5') }}>
     <label @if ($for) for="{{ $for }}" @endif class="text-[15px] font-semibold">{{ $label }}</label>
 
     {{ $slot }}
