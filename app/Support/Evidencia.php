@@ -36,13 +36,18 @@ class Evidencia
         return ['required', 'image', 'max:'.self::MAX_KB];
     }
 
-    /** Guarda la foto del pedido y devuelve su ruta en el disco privado. $tipo es una llave de Pedido::EVIDENCIAS. */
-    public static function guardar(UploadedFile $foto, Pedido $pedido, string $tipo): string
+    /** Lado más largo para el diseño de referencia: es un dibujo con medidas y debe leerse al imprimirlo. */
+    public const LADO_MAX_DISENO = 2400;
+
+    /**
+     * Guarda la foto del pedido y devuelve su ruta en el disco privado. $tipo es una llave de Pedido::EVIDENCIAS.
+     */
+    public static function guardar(UploadedFile $foto, Pedido $pedido, string $tipo, int $ladoMax = self::LADO_MAX): string
     {
         $carpeta = 'evidencias/'.$pedido->id;
         $nombre = $tipo.'-'.now()->format('Ymd-His').'-'.Str::lower(Str::random(6));
 
-        $jpeg = self::comprimir($foto);
+        $jpeg = self::comprimir($foto, $ladoMax);
 
         // Si GD no puede leerla se guarda la original: una evidencia nunca se pierde por no poder comprimirla.
         if ($jpeg === null) {
@@ -62,7 +67,7 @@ class Evidencia
             : null;
     }
 
-    private static function comprimir(UploadedFile $foto): ?string
+    private static function comprimir(UploadedFile $foto, int $ladoMax): ?string
     {
         $contenido = @file_get_contents($foto->getRealPath());
         $original = $contenido === false ? false : @imagecreatefromstring($contenido);
@@ -75,7 +80,7 @@ class Evidencia
 
         $ancho = imagesx($original);
         $alto = imagesy($original);
-        $factor = min(1, self::LADO_MAX / max($ancho, $alto));
+        $factor = min(1, $ladoMax / max($ancho, $alto));
         $nuevoAncho = max(1, (int) round($ancho * $factor));
         $nuevoAlto = max(1, (int) round($alto * $factor));
 

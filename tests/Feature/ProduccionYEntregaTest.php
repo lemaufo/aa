@@ -27,13 +27,13 @@ it('valida el peso dentro de la tolerancia y rechaza el que se sale', function (
     '-6 %' => [194.0, false],
 ]);
 
-it('no termina producción sin las dos fotos', function () {
+it('no termina producción sin la foto del producto, aunque traiga la de la báscula', function () {
     $p = pedido(Estatus::Cobrado, ['etiqueta_impresa_at' => now(), 'peso_produccion' => 207]);
 
     Volt::actingAs(usuario(Rol::Produccion))->test('aa.acciones.produccion', ['pedido' => $p])
-        ->set('foto_producto', UploadedFile::fake()->image('producto.jpg'))
+        ->set('foto_bascula', UploadedFile::fake()->image('bascula.jpg'))
         ->call('terminar')
-        ->assertHasErrors('foto_bascula');
+        ->assertHasErrors('foto_producto');
 
     expect($p->fresh()->estatus)->toBe(Estatus::Cobrado);
 });

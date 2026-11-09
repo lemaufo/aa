@@ -196,6 +196,12 @@ return [
         'lote_rollo' => 'el rollo o lote',
         'foto_producto' => 'la foto del producto terminado',
         'foto_bascula' => 'la foto de la báscula',
+        'peso_nota' => 'la nota que explica el peso',
+        'diseno' => 'el diseño de referencia',
+
+        // Autorización de un supervisor
+        'aut_usuario' => 'el usuario del supervisor',
+        'aut_password' => 'la contraseña del supervisor',
 
         // CEDIS, despacho y entrega
         'ubicacion_cedis' => 'la zona del patio',

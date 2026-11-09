@@ -60,6 +60,13 @@ return [
     */
     'tolerancia_peso' => (float) env('AA_TOLERANCIA_PESO', 5.0),
 
+    /*
+    | Roles que autorizan con su usuario y contraseña la reimpresión de etiquetas y el peso fuera
+    | de tolerancia. Por definir con el cliente (jefe de sucursal, encargado de CEDIS...); se agregan
+    | separados por coma, p. ej. AA_ROLES_AUTORIZAN=admin,cedis. Valores: los de App\Enums\Rol.
+    */
+    'roles_autorizan' => array_values(array_filter(array_map('trim', explode(',', (string) env('AA_ROLES_AUTORIZAN', 'admin'))))),
+
     /* Máximo de renglones (medidas distintas) que caben en la etiqueta sin ocultar información. */
     'max_medidas' => 11,
 

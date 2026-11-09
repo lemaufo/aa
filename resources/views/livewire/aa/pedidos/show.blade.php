@@ -181,6 +181,9 @@ new #[Title('Pedido')] class extends Component {
                                 @php $dp = $pedido->desviacion($pedido->peso_produccion); @endphp
                                 <span class="text-[15px] font-normal text-acero">({{ $dp > 0 ? '+' : '' }}{{ number_format($dp, 2) }} %)</span>
                             </dd>
+                            @if ($pedido->peso_fuera_tolerancia)
+                                <dd class="text-[15px] text-peligro">Fuera de tolerancia, autorizó {{ $pedido->peso_autorizado_por }}: {{ $pedido->peso_nota }}</dd>
+                            @endif
                         </div>
                     @endif
                     @if ($pedido->lote_rollo)
@@ -282,10 +285,13 @@ new #[Title('Pedido')] class extends Component {
                 </dl>
             </section>
 
-            @if ($pedido->evidencia_path || $pedido->evidencia_bascula_path || $pedido->acuse_path)
+            @if ($pedido->diseno_path || $pedido->evidencia_path || $pedido->evidencia_bascula_path || $pedido->acuse_path)
                 <section class="panel">
                     <div class="panel-cabecera"><h2 class="panel-titulo">Evidencias</h2></div>
                     <div class="grid gap-5 px-5 py-5 sm:grid-cols-2">
+                        @if ($pedido->diseno_path)
+                            <x-aa.foto :pedido="$pedido" tipo="diseno" titulo="Diseño de referencia (caja)" />
+                        @endif
                         @if ($pedido->evidencia_path)
                             <x-aa.foto :pedido="$pedido" tipo="producto" titulo="Producto terminado con etiqueta" />
                         @endif

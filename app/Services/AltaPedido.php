@@ -97,6 +97,7 @@ class AltaPedido
                 'sucursal' => $user?->rol->limitadoASuSucursal() ? $user->sucursal : ($sucursal ?: ($traspaso['destino'] ?? 'Sin sucursal')),
                 'cliente' => trim((string) $cliente) ?: Pedido::CLIENTE_POR_CAPTURAR,
                 'material' => $linea['articulo'],
+                'articulo_clave' => $linea['clave'] ?? null,
                 'metros_traspaso' => $linea['cantidad'],
                 'peso_por_metro' => $linea['peso_unitario'],
                 'instrucciones' => trim(($traspaso['observaciones'] ?? '').' '.($linea['notas'] ?? '')) ?: null,

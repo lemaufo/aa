@@ -27,13 +27,17 @@ class Pedido extends Model
         'Venta actualizada en Microsip',
         'Error al actualizar Microsip',
         'Reintento de actualización de venta',
+        'Reimpresión de etiqueta autorizada',
+        'Peso por metro actualizado',
+        'Peso fuera de tolerancia autorizado',
     ];
 
-    /** Columna donde vive cada tipo de evidencia (disco privado). */
+    /** Columna donde vive cada tipo de evidencia (disco privado). El diseño lo adjunta la caja. */
     public const EVIDENCIAS = [
         'producto' => 'evidencia_path',
         'bascula' => 'evidencia_bascula_path',
         'acuse' => 'acuse_path',
+        'diseno' => 'diseno_path',
     ];
 
     protected function casts(): array
@@ -47,6 +51,7 @@ class Pedido extends Model
             'etiqueta_impresa_at' => 'datetime',
             'venta_sync_at' => 'datetime',
             'cancelado_por_expertos' => 'boolean',
+            'peso_fuera_tolerancia' => 'boolean',
             'metros_traspaso' => 'float',
             'peso_por_metro' => 'float',
             'peso_teorico' => 'float',
@@ -89,6 +94,12 @@ class Pedido extends Model
         return round($this->metros_traspaso * $this->peso_por_metro, 2);
     }
 
+    /** Sin peso por metro en el catálogo de Microsip no hay contra qué validar la báscula. */
+    public function tienePesoTeorico(): bool
+    {
+        return $this->pesoTeorico() > 0;
+    }
+
     /** Diferencia porcentual de un peso medido contra el teórico (positivo si pesa de más). */
     public function desviacion(float $pesoReal): float
     {
@@ -99,7 +110,8 @@ class Pedido extends Model
 
     public function dentroDeTolerancia(float $pesoReal): bool
     {
-        return abs($this->desviacion($pesoReal)) <= (float) config('aa.tolerancia_peso');
+        // Con teórico 0 la desviación sale 0 y cualquier peso "pasaría": sin teórico nunca está dentro.
+        return $this->tienePesoTeorico() && abs($this->desviacion($pesoReal)) <= (float) config('aa.tolerancia_peso');
     }
 
     /**

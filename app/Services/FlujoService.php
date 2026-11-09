@@ -173,7 +173,8 @@ class FlujoService
         return $canceladas;
     }
 
-    private function evento(Pedido $pedido, ?User $user, string $accion, ?string $detalle): void
+    /** Anota en la bitácora algo que no mueve el estatus (reimpresión, sincronización). */
+    public function evento(Pedido $pedido, ?User $user, string $accion, ?string $detalle): void
     {
         $pedido->eventos()->create([
             'user_id' => $user?->getKey(),

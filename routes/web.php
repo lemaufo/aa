@@ -4,6 +4,7 @@ use App\Http\Controllers\DispositivoController;
 use App\Http\Middleware\DispositivoAutorizado;
 use App\Http\Middleware\SoloInterno;
 use App\Models\Pedido;
+use App\Support\Etiqueta;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
@@ -28,9 +29,10 @@ Route::middleware('auth')->group(function () {
             Volt::route('pedidos', 'aa.pedidos.index')->name('pedidos.index');
             Volt::route('pedidos/{pedido}', 'aa.pedidos.show')->name('pedidos.show');
 
-            // Etiqueta imprimible (una por pedido, con el folio del traspaso).
+            // Etiqueta imprimible (una por pedido, con el folio del traspaso). Reimprimir pide autorización.
             Route::get('pedidos/{pedido}/etiqueta', function (Pedido $pedido) {
                 abort_unless($pedido->esVisiblePara(auth()->user()), 403);
+                abort_unless(Etiqueta::puedeAbrir(auth()->user(), $pedido), 403, 'Reimprimir la etiqueta requiere la autorización de un supervisor.');
 
                 return view('aa.etiqueta', ['pedido' => $pedido]);
             })->name('pedidos.etiqueta');

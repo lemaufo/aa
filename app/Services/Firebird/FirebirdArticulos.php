@@ -71,6 +71,25 @@ class FirebirdArticulos
         return $a;
     }
 
+    /**
+     * Peso por unidad (PESO_UNITARIO) del artículo, por su clave o, si no se tiene, por su nombre exacto.
+     * Null si el artículo no se encuentra; 0 si existe pero no tiene peso capturado en Microsip.
+     */
+    public function pesoUnitario(?string $clave, string $nombre): ?float
+    {
+        $db = Microsip::db();
+
+        $fila = filled($clave)
+            ? $db->selectOne('select coalesce(a.peso_unitario, 0) as peso from articulos a
+                               join claves_articulos c on c.articulo_id = a.articulo_id
+                              where c.clave_articulo = ?', [$clave])
+            : null;
+
+        $fila ??= $db->selectOne('select first 1 coalesce(peso_unitario, 0) as peso from articulos where nombre = ?', [$nombre]);
+
+        return $fila === null ? null : (float) Microsip::fila($fila)['peso'];
+    }
+
     /** Estatus distintos con su conteo, para el filtro. */
     public function estatus(): array
     {
