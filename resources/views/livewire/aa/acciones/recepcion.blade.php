@@ -25,12 +25,6 @@ new class extends Component {
         return $this->pedido->forma_entrega === FormaEntrega::Cedis;
     }
 
-    public function simular(): void
-    {
-        $this->codigo = $this->pedido->folio;
-        $this->resetErrorBag('codigo');
-    }
-
     public function validar(FlujoService $flujo): void
     {
         $this->validate([
@@ -70,17 +64,7 @@ new class extends Component {
     </div>
 
     <form wire:submit="validar" class="grid gap-6 px-5 py-5">
-        <x-aa.campo label="Código de la etiqueta" for="codigo" :error="$errors->first('codigo')">
-            <div class="flex gap-2">
-                <div class="relative min-w-0 flex-1">
-                    <x-aa.icon name="qr-code" class="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-acero" />
-                    <input id="codigo" type="text" wire:model="codigo" class="input pl-11 font-display text-xl font-semibold"
-                           placeholder="{{ $pedido->folio }}" autocomplete="off" autocapitalize="characters" spellcheck="false"
-                           @error('codigo') aria-invalid="true" @enderror>
-                </div>
-                <button type="button" wire:click="simular" class="btn btn-secundario shrink-0">Usar folio</button>
-            </div>
-        </x-aa.campo>
+        <x-aa.codigo-etiqueta :folio="$pedido->folio" :error="$errors->first('codigo')" />
 
         {{-- La forma de entrega la definió la caja. Si hay que corregirla, la caja la modifica con su contraseña. --}}
         @if ($forma)

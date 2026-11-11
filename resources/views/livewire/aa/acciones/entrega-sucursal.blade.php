@@ -21,12 +21,6 @@ new class extends Component {
         $this->pedido = $pedido;
     }
 
-    public function simular(): void
-    {
-        $this->codigo = $this->pedido->folio;
-        $this->resetErrorBag('codigo');
-    }
-
     public function entregar(FlujoService $flujo): void
     {
         $this->validate($this->reglasAcuse() + ['codigo' => ['required', 'string', 'max:60']], [], ['codigo' => 'el código de la etiqueta']);
@@ -81,17 +75,7 @@ new class extends Component {
 
         <p class="text-acero">Escanea la etiqueta, escribe quién recibe y sube la foto del acuse firmado.</p>
 
-        <x-aa.campo label="Código de la etiqueta" for="codigo" :error="$errors->first('codigo')">
-            <div class="flex gap-2">
-                <div class="relative min-w-0 flex-1">
-                    <x-aa.icon name="qr-code" class="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-acero" />
-                    <input id="codigo" type="text" wire:model="codigo" class="input pl-11 font-display text-xl font-semibold"
-                           placeholder="{{ $pedido->folio }}" autocomplete="off" autocapitalize="characters" spellcheck="false"
-                           @error('codigo') aria-invalid="true" @enderror>
-                </div>
-                <button type="button" wire:click="simular" class="btn btn-secundario shrink-0">Usar folio</button>
-            </div>
-        </x-aa.campo>
+        <x-aa.codigo-etiqueta :folio="$pedido->folio" :error="$errors->first('codigo')" />
 
         <x-aa.campo label="Nombre completo de quien recibe" for="recibe_nombre" :error="$errors->first('recibe_nombre')">
             <input id="recibe_nombre" type="text" wire:model="recibe_nombre" class="input" autocomplete="off"

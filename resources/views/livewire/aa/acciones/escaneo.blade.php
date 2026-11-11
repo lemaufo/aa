@@ -46,12 +46,6 @@ new class extends Component {
     }
 
     /** Solo para pruebas sin lector: llena el código con el folio del pedido. */
-    public function simular(): void
-    {
-        $this->codigo = $this->pedido->folio;
-        $this->resetErrorBag('codigo');
-    }
-
     public function confirmar(FlujoService $flujo): void
     {
         $this->validate(['codigo' => ['required', 'string', 'max:60']], [], ['codigo' => 'el código de la etiqueta']);
@@ -88,17 +82,7 @@ new class extends Component {
     <form wire:submit="confirmar" class="grid gap-5 px-5 py-5">
         <p class="text-acero">{{ $t['ayuda'] }}</p>
 
-        <x-aa.campo label="Código de la etiqueta" for="codigo" :error="$errors->first('codigo')">
-            <div class="flex gap-2">
-                <div class="relative min-w-0 flex-1">
-                    <x-aa.icon name="qr-code" class="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-acero" />
-                    <input id="codigo" type="text" wire:model="codigo" class="input pl-11 font-display text-xl font-semibold"
-                           placeholder="{{ $pedido->folio }}" autocomplete="off" autocapitalize="characters" spellcheck="false"
-                           @error('codigo') aria-invalid="true" @enderror>
-                </div>
-                <button type="button" wire:click="simular" class="btn btn-secundario shrink-0">Usar folio</button>
-            </div>
-        </x-aa.campo>
+        <x-aa.codigo-etiqueta :folio="$pedido->folio" :error="$errors->first('codigo')" />
 
         <div class="flex justify-end">
             <button type="submit" class="btn btn-primario w-full sm:w-auto" wire:loading.attr="disabled" wire:target="confirmar">

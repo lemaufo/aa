@@ -171,3 +171,30 @@ it('Pedidos ya no tiene buscador de traspasos', function () {
 
     $this->actingAs(usuario(Rol::Cajero))->get(route('pedidos.index'))->assertOk()->assertDontSee('Buscar traspaso');
 });
+
+it('pide el código de la etiqueta con escáner y sin el atajo de usar el folio', function () {
+    $p = pedido(Estatus::EnviadoASucursal);
+
+    $this->actingAs(usuario(Rol::Admin))->get(route('pedidos.show', $p))
+        ->assertSee('Código de la etiqueta')
+        ->assertSee('x-data="escaner"', false)
+        ->assertSee('Escanear')
+        ->assertDontSee('Usar folio');
+});
+
+it('al editar un usuario el formulario sale debajo de su fila y no arriba de la tabla', function () {
+    $admin = usuario(Rol::Admin);
+    $otro = usuario(Rol::Cedis);
+
+    $html = Volt::actingAs($admin)->test('aa.usuarios')->call('editar', $otro->id)->html();
+
+    $fila = strpos($html, 'wire:key="usuario-'.$otro->id.'"');
+    $formulario = strpos($html, 'Editar usuario');
+    expect($fila)->not->toBeFalse()
+        ->and($formulario)->toBeGreaterThan($fila)
+        ->and($html)->toContain('wire:key="editar-'.$otro->id.'"');
+
+    // El de usuario nuevo sigue arriba de la tabla.
+    $nuevo = Volt::actingAs($admin)->test('aa.usuarios')->call('nuevo')->html();
+    expect(strpos($nuevo, 'wire:submit="guardar"'))->toBeLessThan(strpos($nuevo, '<table class="w-full min-w-[34rem]'));
+});
