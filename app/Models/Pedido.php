@@ -29,6 +29,9 @@ class Pedido extends Model
         'Reintento de actualización de venta',
         'Reimpresión de etiqueta autorizada',
         'Peso por metro actualizado',
+        'Diseño de referencia adjuntado',
+        'Diseño de referencia cambiado',
+        'Diseño de referencia eliminado',
         'Peso fuera de tolerancia autorizado',
     ];
 

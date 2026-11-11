@@ -304,20 +304,11 @@ new class extends Component {
             @endif
         </div>
 
-        {{-- Diseño que adjuntó la caja (canalón y piezas sin clave): hay que verlo antes de cortar y doblar --}}
+        {{-- Diseño de referencia (canalón): la hoja con clip junto a la bitácora; aquí solo el aviso --}}
         @if ($pedido->diseno_path)
-            <div class="flex flex-wrap items-center gap-4 rounded-md border-2 border-naranja bg-naranja-tinte px-4 py-3">
-                <a href="{{ route('evidencia', [$pedido, 'diseno']) }}" target="_blank" rel="noopener" class="shrink-0">
-                    <img src="{{ route('evidencia', [$pedido, 'diseno']) }}" alt="Diseño de referencia del pedido {{ $pedido->folio }}"
-                         class="h-24 w-24 rounded-md border border-linea bg-white object-cover">
-                </a>
-                <div class="grid min-w-0 flex-1 gap-1">
-                    <p class="flex items-center gap-1.5 font-semibold"><x-aa.icon name="paper-clip" /> Este pedido trae un diseño de referencia</p>
-                    <p class="text-[15px] text-acero">Revísalo antes de cortar y doblar.</p>
-                    <a href="{{ route('evidencia', [$pedido, 'diseno']) }}" target="_blank" rel="noopener"
-                       class="text-[15px] font-semibold text-naranja-fuerte underline-offset-4 hover:underline">Ver e imprimir el diseño</a>
-                </div>
-            </div>
+            <p class="flex items-center gap-1.5 rounded-md border-2 border-naranja bg-naranja-tinte px-4 py-2.5 font-semibold">
+                <x-aa.icon name="paper-clip" /> Este pedido trae un diseño de referencia. Revísalo arriba de la bitácora antes de cortar y doblar.
+            </p>
         @endif
 
         @if ($paso === 1)

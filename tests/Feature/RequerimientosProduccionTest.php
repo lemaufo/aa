@@ -89,32 +89,34 @@ it('producción no reimprime la etiqueta sin la autorización de un supervisor',
         ->and($p->eventos()->latest('id')->first()->accion)->toBe('Reimpresión de etiqueta autorizada');
 });
 
-it('la caja adjunta el diseño de referencia y producción lo ve', function () {
-    $p = pedido(Estatus::EnExpertos);
-    venta('V-900');
+it('la caja adjunta el diseño de referencia y producción lo ve arriba de la bitácora', function () {
+    $p = pedido(Estatus::Cobrado);
 
-    Volt::actingAs(usuario(Rol::Cajero))->test('aa.acciones.ligar', ['pedido' => $p])
-        ->set([
-            'folio_venta' => 'V-900',
-            'cliente' => 'Constructora Prueba',
-            'telefono' => '9611234567',
-            'forma_entrega' => 'cedis',
-            'fecha_prometida' => now()->toDateString(),
-            'cortes' => [['piezas' => 10, 'medida' => 6]],
-            'diseno' => UploadedFile::fake()->image('canalon.png', 3000, 2000),
-        ])
-        ->call('ligar')
+    Volt::actingAs(usuario(Rol::Cajero))->test('aa.diseno', ['pedido' => $p])
+        ->set('diseno', UploadedFile::fake()->image('canalon.png', 3000, 2000))
         ->assertHasNoErrors();
 
     $p->refresh();
-    expect($p->estatus)->toBe(Estatus::Cobrado)
-        ->and($p->diseno_path)->toStartWith("evidencias/{$p->id}/diseno-");
+    expect($p->diseno_path)->toStartWith("evidencias/{$p->id}/diseno-")
+        ->and($p->eventos()->latest('id')->first()->accion)->toBe('Diseño de referencia adjuntado');
     Storage::disk('local')->assertExists($p->diseno_path);
 
     // Se guarda con más resolución que las fotos, para que el dibujo se lea al imprimirlo.
     expect(imagesx(imagecreatefromstring(Storage::disk('local')->get($p->diseno_path))))->toBe(2400);
 
-    Volt::actingAs(usuario(Rol::Produccion))->test('aa.acciones.produccion', ['pedido' => $p])
-        ->assertSee('Este pedido trae un diseño de referencia')
-        ->assertSee(route('evidencia', [$p, 'diseno']), false);
+    // Producción lo ve pero no lo cambia.
+    Volt::actingAs(usuario(Rol::Produccion))->test('aa.diseno', ['pedido' => $p])
+        ->assertSee('Diseño de referencia')
+        ->assertSee(route('evidencia', [$p, 'diseno']), false)
+        ->assertDontSee('Cambiar el diseño');
+
+    // La caja lo puede quitar: se borra el archivo y queda en la bitácora.
+    $ruta = $p->diseno_path;
+    Volt::actingAs(usuario(Rol::Cajero))->test('aa.diseno', ['pedido' => $p])->call('eliminar');
+    expect($p->fresh()->diseno_path)->toBeNull();
+    Storage::disk('local')->assertMissing($ruta);
+
+    // Sin diseño y sin poder adjuntarlo, la hoja no aparece.
+    Volt::actingAs(usuario(Rol::Produccion))->test('aa.diseno', ['pedido' => pedido(Estatus::Cobrado)])
+        ->assertDontSee('Diseño de referencia');
 });

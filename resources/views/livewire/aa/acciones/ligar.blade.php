@@ -5,20 +5,14 @@ use App\Livewire\Concerns\ManejaCortes;
 use App\Models\Pedido;
 use App\Services\FlujoService;
 use App\Services\ValidadorTicket;
-use App\Support\Evidencia;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\Rule;
 use Livewire\Volt\Component;
-use Livewire\WithFileUploads;
 
 new class extends Component {
     use ManejaCortes;
-    use WithFileUploads;
 
     public Pedido $pedido;
-
-    /** Diseño de referencia (canalón y piezas sin clave propia): dibujo o boceto del cliente. Opcional. */
-    public $diseno = null;
 
     public string $folio_venta = '';
 
@@ -81,7 +75,6 @@ new class extends Component {
             'recibe_nombre' => [Rule::requiredIf($this->aDomicilio()), 'nullable', 'string', 'max:120'],
             'direccion_entrega' => [Rule::requiredIf($this->aDomicilio()), 'nullable', 'string', 'max:255'],
             'gps_link' => ['nullable', 'url', 'max:255'],
-            'diseno' => ['nullable', ...array_slice(Evidencia::reglas(), 1)],
         ] + $this->reglasCortes());
 
         if (! $this->cuadraConTraspaso($this->pedido->metros_traspaso)) {
@@ -113,11 +106,9 @@ new class extends Component {
                 'direccion_entrega' => $domicilio ? trim($this->direccion_entrega) : null,
                 'gps_link' => $domicilio ? (trim($this->gps_link) ?: null) : null,
                 'cortes_solicitados' => $this->cortesLimpios(),
-            ] + ($this->diseno ? ['diseno_path' => Evidencia::guardar($this->diseno, $this->pedido, 'diseno', Evidencia::LADO_MAX_DISENO)] : []),
-                "Ticket {$venta} validado contra el traspaso. ".FormaEntrega::from($this->forma_entrega)->label()
+            ], "Ticket {$venta} validado contra el traspaso. ".FormaEntrega::from($this->forma_entrega)->label()
                 .'. Prometido para el '.\Illuminate\Support\Carbon::parse($this->fecha_prometida)->translatedFormat('j M Y')
-                .($domicilio ? '. Recibe: '.trim($this->recibe_nombre) : '')
-                .($this->diseno ? '. Con diseño de referencia' : ''));
+                .($domicilio ? '. Recibe: '.trim($this->recibe_nombre) : ''));
         } catch (AuthorizationException $e) {
             $this->dispatch('toast', tipo: 'error', mensaje: $e->getMessage());
             $this->dispatch('pedido-actualizado');
@@ -217,13 +208,6 @@ new class extends Component {
 
         <x-aa.cortes :cortes="$cortes" :total="$this->totalMetros()" :meta="$pedido->metros_traspaso"
                      titulo="Piezas y medidas del pedido" :errores="$this->erroresCortes()" />
-
-        {{-- Canalón y piezas sin clave propia (se cobran como hoja más doblez): producción necesita ver el dibujo --}}
-        <div class="grid gap-2 rounded-md border border-linea px-4 py-4">
-            <p class="flex items-center gap-1.5 font-semibold"><x-aa.icon name="paper-clip" /> Diseño de referencia (opcional)</p>
-            <p class="text-[15px] text-acero">Para canalón u otra pieza especial: adjunta la foto del boceto o dibujo del cliente, con sus medidas. Producción lo verá antes de cortar y doblar.</p>
-            <x-aa.subir label="Imagen del diseño" model="diseno" :archivo="$diseno" :error="$errors->first('diseno')" :camara="false" />
-        </div>
 
         <div class="flex flex-wrap justify-end gap-3">
             <button type="submit" class="btn btn-primario w-full sm:w-auto" wire:loading.attr="disabled" wire:target="ligar">

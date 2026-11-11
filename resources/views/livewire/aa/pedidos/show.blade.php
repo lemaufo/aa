@@ -285,13 +285,10 @@ new #[Title('Pedido')] class extends Component {
                 </dl>
             </section>
 
-            @if ($pedido->diseno_path || $pedido->evidencia_path || $pedido->evidencia_bascula_path || $pedido->acuse_path)
+            @if ($pedido->evidencia_path || $pedido->evidencia_bascula_path || $pedido->acuse_path)
                 <section class="panel">
                     <div class="panel-cabecera"><h2 class="panel-titulo">Evidencias</h2></div>
                     <div class="grid gap-5 px-5 py-5 sm:grid-cols-2">
-                        @if ($pedido->diseno_path)
-                            <x-aa.foto :pedido="$pedido" tipo="diseno" titulo="Diseño de referencia (caja)" />
-                        @endif
                         @if ($pedido->evidencia_path)
                             <x-aa.foto :pedido="$pedido" tipo="producto" titulo="Producto terminado con etiqueta" />
                         @endif
@@ -305,6 +302,10 @@ new #[Title('Pedido')] class extends Component {
                 </section>
             @endif
         </div>
+
+        <div class="grid gap-6">
+        {{-- Diseño de referencia (canalón): arriba de la bitácora, a la vista de todos --}}
+        @livewire('aa.diseno', ['pedido' => $pedido], key('diseno-'.$pedido->estatus->value.'-'.($pedido->diseno_path ?? 'x')))
 
         {{-- Bitácora --}}
         <section class="panel" aria-labelledby="bitacora">
@@ -335,5 +336,6 @@ new #[Title('Pedido')] class extends Component {
                 @endforeach
             </ol>
         </section>
+        </div>
     </div>
 </div>
