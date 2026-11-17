@@ -115,8 +115,8 @@ new class extends Component {
                    @error('recibe_nombre') aria-invalid="true" @enderror>
         </x-aa.campo>
 
-        <x-aa.subir label="Foto del acuse firmado" model="foto_acuse" :archivo="$foto_acuse" :error="$errors->first('foto_acuse')"
-                    ayuda="Documento con la firma de quien recibe. Se guarda 2 años." />
+        <x-aa.foto-documento label="Foto del acuse firmado" model="foto_acuse" :archivo="$foto_acuse" :error="$errors->first('foto_acuse')"
+                             ayuda="Tómale foto con la cámara o adjunta la imagen si ya la tienes. Documento con la firma de quien recibe; se guarda 2 años." />
 
         <p class="text-[15px] text-acero">Al marcarlo entregado, la venta {{ $pedido->folio_venta }} se actualiza sola en Microsip.</p>
 

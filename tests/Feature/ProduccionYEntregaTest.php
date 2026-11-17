@@ -63,3 +63,22 @@ it('entrega en CEDIS con acuse, lo guarda en el disco privado y actualiza la ven
         ->and($p->acuse_path)->toStartWith("evidencias/{$p->id}/");
     Storage::disk('local')->assertExists($p->acuse_path);
 });
+
+it('en CEDIS el acuse se puede tomar con la cámara o adjuntar como archivo', function () {
+    $p = pedido(Estatus::EnCedis);
+
+    Volt::actingAs(usuario(Rol::Cedis))->test('aa.acciones.entrega-cedis', ['pedido' => $p])
+        ->assertSee('Tomar foto')
+        ->assertSee('Adjuntar archivo')
+        ->assertSeeHtml('x-data="camaraFoto(')
+        ->assertSeeHtml('capture="environment"');
+});
+
+it('en sucursal el acuse también se puede tomar con la cámara o adjuntar como archivo', function () {
+    $p = pedido(Estatus::EnSucursal);
+
+    Volt::actingAs(usuario(Rol::Sucursal))->test('aa.acciones.entrega-sucursal', ['pedido' => $p])
+        ->assertSee('Tomar foto')
+        ->assertSee('Adjuntar archivo')
+        ->assertSeeHtml('x-data="camaraFoto(');
+});
