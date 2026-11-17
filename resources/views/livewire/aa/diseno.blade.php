@@ -35,6 +35,12 @@ new class extends Component {
             && in_array($this->pedido->estatus, [Estatus::EnExpertos, Estatus::Cobrado], true);
     }
 
+    /** Almacén (CEDIS) y producción imprimen el diseño en tamaño carta, sin pedir autorización. */
+    public function puedeImprimir(): bool
+    {
+        return Flujo::tieneRol(auth()->user(), [Rol::Produccion, Rol::Cedis]);
+    }
+
     public function updatedDiseno(FlujoService $flujo): void
     {
         abort_unless($this->puedeAdjuntar(), 403);
@@ -69,6 +75,7 @@ new class extends Component {
 @php
     $hay = (bool) $pedido->diseno_path;
     $puede = $this->puedeAdjuntar();
+    $imprime = $hay && $this->puedeImprimir();
     $url = $hay ? route('evidencia', [$pedido, 'diseno']) : null;
 @endphp
 
@@ -85,9 +92,39 @@ new class extends Component {
             @keyframes nota-entra { from { opacity: 0; transform: translateY(-6px) rotate(-.5deg); } to { opacity: 1; transform: rotate(.8deg); } }
             @keyframes clip-mece { 0%, 100% { transform: rotate(-8deg); } 40% { transform: rotate(-14deg); } 70% { transform: rotate(-5deg); } }
             @media (prefers-reduced-motion: reduce) { .nota-frente, .notas:hover .nota-clip { animation: none; } }
+
+            /*
+             * Impresión del diseño en tamaño carta (8.5 × 11 in), sin salir del pedido: mientras se imprime,
+             * en la hoja solo sale .diseno-carta. La página con nombre no cambia el tamaño de otras impresiones.
+             */
+            @page diseno-carta { size: letter portrait; margin: 10mm; }
+            .diseno-carta { display: none; }
+            @media print {
+                body.imprimiendo-diseno > *:not(.diseno-carta) { display: none !important; }
+                body.imprimiendo-diseno .diseno-carta { display: flex; page: diseno-carta; flex-direction: column; align-items: center; gap: 4mm;
+                                                        width: 100%; height: 259mm; color: #000; background: #fff; }
+                .diseno-carta-titulo { align-self: stretch; display: flex; justify-content: space-between; border-bottom: 1px solid #000;
+                                       padding-bottom: 2mm; font: 600 12pt system-ui, sans-serif; }
+                .diseno-carta img { flex: 1 1 auto; min-height: 0; max-width: 100%; max-height: 240mm; object-fit: contain; }
+            }
         </style>
 
-        <section class="notas" aria-labelledby="diseno-titulo" x-data="{ abierto: false }" x-on:keydown.escape.window="abierto = false">
+        <section class="notas" aria-labelledby="diseno-titulo" x-on:keydown.escape.window="abierto = false"
+                 x-data="{
+                     abierto: false,
+                     src: null,
+                     async imprimir() {
+                         this.src = @js($url);
+                         await this.$nextTick();
+                         const img = document.getElementById('diseno-carta-{{ $pedido->id }}');
+                         if (img && ! img.complete) {
+                             await new Promise(listo => { img.onload = listo; img.onerror = listo; });
+                         }
+                         document.body.classList.add('imprimiendo-diseno');
+                         window.addEventListener('afterprint', () => document.body.classList.remove('imprimiendo-diseno'), { once: true });
+                         window.print();
+                     },
+                 }">
             <div class="nota nota-atras" aria-hidden="true"></div>
 
             <svg class="nota-clip" viewBox="0 0 34 80" fill="none" aria-hidden="true">
@@ -105,6 +142,12 @@ new class extends Component {
                     @if ($hay)
                         <button type="button" x-on:click="abierto = true" class="inline-flex items-center gap-1.5 underline underline-offset-4 hover:text-naranja-fuerte">
                             <x-aa.icon name="eye" class="size-4" /> Ver diseño
+                        </button>
+                    @endif
+
+                    @if ($imprime)
+                        <button type="button" x-on:click="imprimir()" class="inline-flex items-center gap-1.5 underline underline-offset-4 hover:text-naranja-fuerte">
+                            <x-aa.icon name="printer" class="size-4" /> Imprimir
                         </button>
                     @endif
 
@@ -135,7 +178,14 @@ new class extends Component {
                         <div class="grid max-h-full w-full max-w-4xl gap-3 rounded-md bg-white p-4 shadow-xl" x-trap.noscroll="abierto">
                             <div class="flex items-center justify-between gap-3">
                                 <p class="font-display text-xl font-semibold">Diseño de referencia · <span class="folio">{{ $pedido->folio }}</span></p>
-                                <button type="button" x-on:click="abierto = false" class="btn btn-secundario">Cerrar</button>
+                                <div class="flex gap-2">
+                                    @if ($imprime)
+                                        <button type="button" x-on:click="imprimir()" class="btn btn-primario">
+                                            <x-aa.icon name="printer" /> Imprimir (carta)
+                                        </button>
+                                    @endif
+                                    <button type="button" x-on:click="abierto = false" class="btn btn-secundario">Cerrar</button>
+                                </div>
                             </div>
                             {{-- La imagen se pide hasta que se abre el modal --}}
                             <template x-if="abierto">
@@ -143,6 +193,19 @@ new class extends Component {
                                      class="mx-auto max-h-[calc(100dvh-9rem)] w-auto max-w-full rounded-sm border border-linea object-contain">
                             </template>
                         </div>
+                    </div>
+                </template>
+            @endif
+
+            @if ($imprime)
+                {{-- Hoja carta que se imprime: solo se ve en papel; la imagen se pide al tocar Imprimir --}}
+                <template x-teleport="body">
+                    <div class="diseno-carta" aria-hidden="true">
+                        <div class="diseno-carta-titulo">
+                            <span>Diseño de referencia · {{ $pedido->folio }}</span>
+                            <span>{{ $pedido->cliente }}</span>
+                        </div>
+                        <img id="diseno-carta-{{ $pedido->id }}" x-bind:src="src" alt="Diseño de referencia del pedido {{ $pedido->folio }}">
                     </div>
                 </template>
             @endif

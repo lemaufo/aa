@@ -70,6 +70,23 @@ it('un peso fuera de tolerancia pasa solo con nota y la contraseña de un superv
         ->and($p->eventos()->latest('id')->first()->accion)->toBe('Peso fuera de tolerancia autorizado');
 });
 
+it('almacén y producción imprimen el diseño en tamaño carta sin autorización; la caja no', function () {
+    Storage::disk('local')->put('evidencias/1/diseno-20261117-100000-abc123.jpg', 'x');
+    $p = pedido(Estatus::Cobrado, ['diseno_path' => 'evidencias/1/diseno-20261117-100000-abc123.jpg']);
+
+    foreach ([Rol::Produccion, Rol::Cedis, Rol::Admin] as $rol) {
+        Volt::actingAs(usuario($rol))->test('aa.diseno', ['pedido' => $p])
+            ->assertSee('Imprimir (carta)')
+            ->assertSee('id="diseno-carta-'.$p->id.'"', false)
+            ->assertSee('size: letter', false);
+    }
+
+    Volt::actingAs(usuario(Rol::Cajero))->test('aa.diseno', ['pedido' => $p])
+        ->assertSee('Ver diseño')
+        ->assertDontSee('Imprimir (carta)')
+        ->assertDontSee('id="diseno-carta-'.$p->id.'"', false);
+});
+
 it('producción no reimprime la etiqueta sin la autorización de un supervisor', function () {
     $p = pedido(Estatus::Cobrado, ['etiqueta_impresa_at' => now()]);
     $operador = usuario(Rol::Produccion);
