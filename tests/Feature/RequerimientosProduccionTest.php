@@ -104,6 +104,29 @@ it('producción no reimprime la etiqueta sin la autorización de un supervisor',
 
     expect(Etiqueta::puedeAbrir($operador, $p))->toBeTrue()
         ->and($p->eventos()->latest('id')->first()->accion)->toBe('Reimpresión de etiqueta autorizada');
+
+    // La autorización dura 1 minuto: a los 61 segundos ya no abre.
+    $this->travel(61)->seconds();
+    expect(Etiqueta::puedeAbrir($operador, $p))->toBeFalse();
+    $this->actingAs($operador)->get(route('pedidos.etiqueta', $p))->assertForbidden();
+});
+
+it('la etiqueta toma el tamaño configurado y lo acepta en in o mm', function () {
+    $p = pedido(Estatus::Cobrado);
+    $admin = usuario(Rol::Admin);
+
+    $this->actingAs($admin)->get(route('pedidos.etiqueta', $p))->assertOk()
+        ->assertSee('data-ancho="101.6" data-alto="152.4"', false)
+        ->assertSee('size: 101.6mm 152.4mm', false);
+
+    config(['aa.etiqueta' => '100x50mm']);
+    $this->actingAs($admin)->get(route('pedidos.etiqueta', $p))->assertOk()
+        ->assertSee('data-ancho="100" data-alto="50"', false)
+        ->assertSee('size: 100mm 50mm', false);
+
+    // Un valor que no se entiende cae en 4×6 in.
+    config(['aa.etiqueta' => 'grande']);
+    $this->actingAs($admin)->get(route('pedidos.etiqueta', $p))->assertSee('data-ancho="101.6" data-alto="152.4"', false);
 });
 
 it('la caja adjunta el diseño de referencia y producción lo ve arriba de la bitácora', function () {

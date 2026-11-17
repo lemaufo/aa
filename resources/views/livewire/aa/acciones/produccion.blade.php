@@ -55,7 +55,7 @@ new class extends Component {
                 $flujo->evento($pedido, auth()->user(), 'Peso por metro actualizado', $cambio);
             }
 
-            Etiqueta::permitir($pedido, 2);
+            Etiqueta::permitir($pedido);
         }
     }
 
@@ -121,7 +121,13 @@ new class extends Component {
         $this->resetErrorBag('peso_nota');
     }
 
-    /** Un supervisor autoriza reimprimir: la etiqueta se puede abrir unos minutos en este equipo. */
+    /** Al vencer la autorización el enlace se quita solo; la ruta ya no abriría la etiqueta. */
+    public function vencerReimpresion(): void
+    {
+        $this->reimpresionLista = false;
+    }
+
+    /** Un supervisor autoriza reimprimir: la etiqueta se puede abrir Etiqueta::SEGUNDOS en este equipo. */
     public function autorizarReimpresion(FlujoService $flujo): void
     {
         $this->validate($this->reglasAutorizacion());
@@ -460,12 +466,13 @@ new class extends Component {
         @if ($paso > 1)
             <div class="grid gap-3 border-t border-linea pt-4">
                 @if ($autoriza || $reimpresionLista)
-                    <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex flex-wrap items-center gap-3"
+                         @if (! $autoriza) x-data x-init="setTimeout(() => $wire.vencerReimpresion(), {{ \App\Support\Etiqueta::SEGUNDOS * 1000 }})" @endif>
                         <a href="{{ route('pedidos.etiqueta', [$pedido, 'auto' => 1]) }}" target="_blank" rel="noopener" class="btn btn-secundario">
                             <x-aa.icon name="printer" /> Reimprimir etiqueta
                         </a>
-                        @if ($reimpresionLista)
-                            <span class="text-[15px] font-semibold text-ok">Reimpresión autorizada por {{ \App\Support\Etiqueta::minutos() }} {{ \App\Support\Etiqueta::minutos() === 1 ? 'minuto' : 'minutos' }} en este equipo.</span>
+                        @if ($reimpresionLista && ! $autoriza)
+                            <span class="text-[15px] font-semibold text-ok">Reimpresión autorizada por {{ \App\Support\Etiqueta::duracion() }} en este equipo.</span>
                         @endif
                     </div>
                 @elseif ($autorizando === 'reimpresion')

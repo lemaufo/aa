@@ -9,12 +9,12 @@ use App\Services\Autorizacion;
 /**
  * Quién abre la etiqueta imprimible. La primera impresión es libre (es la orden de producción); después,
  * reimprimir pide la contraseña de un supervisor, salvo que quien opera ya tenga un rol que autoriza.
- * La autorización vale unos minutos en la sesión de ese equipo, para el pedido que se autorizó.
+ * La autorización vale SEGUNDOS en la sesión de ese equipo, solo para el pedido que se autorizó.
  */
 final class Etiqueta
 {
-    /** Minutos que dura una reimpresión autorizada. */
-    private const MINUTOS = 1;
+    /** Segundos que dura una reimpresión autorizada (y la ventana de la primera impresión). */
+    public const SEGUNDOS = 60;
 
     public static function puedeAbrir(User $user, Pedido $pedido): bool
     {
@@ -24,18 +24,23 @@ final class Etiqueta
     }
 
     /**
-     * Deja abrir la etiqueta de este pedido en esta sesión durante unos minutos. La primera impresión
-     * también lo usa (2 min): el botón abre la etiqueta y a la vez la marca como impresa, y la pestaña
-     * puede llegar cuando ya quedó marcada.
+     * Deja abrir la etiqueta de este pedido en esta sesión durante SEGUNDOS. La primera impresión también
+     * lo usa: el botón abre la etiqueta y a la vez la marca como impresa, y la pestaña puede llegar cuando
+     * ya quedó marcada.
      */
-    public static function permitir(Pedido $pedido, int $minutos = self::MINUTOS): void
+    public static function permitir(Pedido $pedido): void
     {
-        session()->put(self::llave($pedido), now()->addMinutes($minutos)->getTimestamp());
+        session()->put(self::llave($pedido), now()->addSeconds(self::SEGUNDOS)->getTimestamp());
     }
 
-    public static function minutos(): int
+    /** "1 minuto", "90 segundos"... para los mensajes de la pantalla. */
+    public static function duracion(): string
     {
-        return self::MINUTOS;
+        $s = self::SEGUNDOS;
+
+        return $s % 60 === 0
+            ? ($s / 60).($s === 60 ? ' minuto' : ' minutos')
+            : $s.' segundos';
     }
 
     private static function llave(Pedido $pedido): string

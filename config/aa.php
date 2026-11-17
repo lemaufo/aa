@@ -70,6 +70,13 @@ return [
     /* Máximo de renglones (medidas distintas) que caben en la etiqueta sin ocultar información. */
     'max_medidas' => 11,
 
+    /*
+    | Tamaño por defecto de la etiqueta térmica: ancho x alto, en in o mm (4x6in, 100x150mm, 4x2in...).
+    | En la pantalla de la etiqueta cada equipo puede elegir otro tamaño (o escribir uno a la medida) y
+    | se recuerda en ese navegador. El diseño se acomoda solo al tamaño.
+    */
+    'etiqueta' => env('AA_ETIQUETA', '4x6in'),
+
     /* Política: el pedido especial se vende en un ticket independiente, sin productos de línea. */
     'ticket_exclusivo' => (bool) env('AA_TICKET_EXCLUSIVO', true),
 
