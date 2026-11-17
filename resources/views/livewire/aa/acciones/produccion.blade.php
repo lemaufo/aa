@@ -465,7 +465,7 @@ new class extends Component {
                             <x-aa.icon name="printer" /> Reimprimir etiqueta
                         </a>
                         @if ($reimpresionLista)
-                            <span class="text-[15px] font-semibold text-ok">Reimpresión autorizada por {{ \App\Support\Etiqueta::minutos() }} minutos en este equipo.</span>
+                            <span class="text-[15px] font-semibold text-ok">Reimpresión autorizada por {{ \App\Support\Etiqueta::minutos() }} {{ \App\Support\Etiqueta::minutos() === 1 ? 'minuto' : 'minutos' }} en este equipo.</span>
                         @endif
                     </div>
                 @elseif ($autorizando === 'reimpresion')

@@ -14,7 +14,7 @@ use App\Services\Autorizacion;
 final class Etiqueta
 {
     /** Minutos que dura una reimpresión autorizada. */
-    private const MINUTOS = 10;
+    private const MINUTOS = 1;
 
     public static function puedeAbrir(User $user, Pedido $pedido): bool
     {
