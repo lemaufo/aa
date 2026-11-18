@@ -131,9 +131,9 @@ Solo ves los pedidos de tu sucursal.
 
 - **Dispositivos autorizados** (solo SYSDBA y administradores): da de alta cada computadora, tablet o celular con
   su nombre y su dirección MAC, y genera el código de un solo uso que se captura en ese dispositivo. Busca por
-  nombre o MAC y filtra por estatus. **Suspender** lo bloquea un tiempo (se puede reactivar); **Dar de baja** es
-  definitivo. **Nuevo código** sirve si se borraron los datos del navegador. Abajo está la bitácora de
-  dispositivos: altas, cambios, intentos de uso bloqueados e intentos de entrar sin permiso. Solo aplica cuando la
+  nombre o MAC y filtra por estatus. **Suspender** lo bloquea un tiempo (se puede reactivar); **Dar de baja** y
+  **Eliminar** (lo quita de la lista) son definitivos. **Nuevo código** sirve si se borraron los datos del navegador. Abajo está la bitácora de
+  dispositivos: altas, cambios, eliminaciones, intentos de uso bloqueados e intentos de entrar sin permiso. Solo aplica cuando la
   autorización de dispositivos está encendida en el servidor.
 
 ---

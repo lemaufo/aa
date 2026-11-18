@@ -28,7 +28,7 @@ class CodigoDispositivo extends Command
                 return self::FAILURE;
             }
 
-            if (Dispositivo::where('mac', $mac)->where('estatus', '!=', EstatusDispositivo::Baja->value)->exists()) {
+            if (Dispositivo::macOcupada($mac)) {
                 $this->error("La MAC {$mac} ya está registrada en otro dispositivo activo o suspendido.");
 
                 return self::FAILURE;

@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Solo deja pasar dispositivos autorizados y activos (si AA_DISPOSITIVOS=true). El rol Consulta queda exento.
- * Un dispositivo suspendido o dado de baja, o cuya MAC en la red local no coincide con la registrada, se
+ * Un dispositivo suspendido, dado de baja o eliminado, o cuya MAC en la red local no coincide con la registrada, se
  * bloquea y queda en la bitácora de dispositivos (una vez cada pocos minutos, para no llenarla en cada clic).
  */
 class DispositivoAutorizado
@@ -37,9 +37,9 @@ class DispositivoAutorizado
         }
 
         if (! $dispositivo->operable()) {
-            $this->anotarBloqueo($dispositivo, $request, 'Intento de uso con dispositivo '.mb_strtolower($dispositivo->estatus->label()));
+            $this->anotarBloqueo($dispositivo, $request, $dispositivo->motivoBloqueo());
 
-            return redirect()->route('dispositivo.mostrar')->with('bloqueo', $dispositivo->estatus->avisoBloqueo());
+            return redirect()->route('dispositivo.mostrar')->with('bloqueo', $dispositivo->avisoBloqueo());
         }
 
         if (config('aa.dispositivos.validar_mac') && $dispositivo->mac && ($vista = $this->red->de($request->ip())) && $vista !== $dispositivo->mac) {

@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Schema;
 
 /*
 | "Equipos autorizados" pasa a "Dispositivos autorizados": cada dispositivo tiene MAC y un estatus
-| activo | suspendido | baja. Los equipos revocados de antes quedan en baja. La activación por código y cookie
+| activo | suspendido | baja, y se puede eliminar de la lista (borrado lógico: el registro queda para la
+| bitácora y para reconocer y bloquear su llave). Los equipos revocados de antes quedan en baja. La activación por código y cookie
 | se conserva. Los movimientos van a una bitácora propia (no a la de pedidos).
 */
 return new class extends Migration
@@ -20,6 +21,7 @@ return new class extends Migration
             // entre los dispositivos activos y suspendidos.
             $table->string('mac', 17)->nullable()->index()->after('nombre');
             $table->string('estatus', 12)->default('activo')->index()->after('mac');
+            $table->softDeletes();
         });
 
         DB::table('dispositivos')->whereNotNull('revocado_at')->update(['estatus' => 'baja']);
@@ -47,6 +49,7 @@ return new class extends Migration
         Schema::table('dispositivos', function (Blueprint $table) {
             $table->dropIndex(['mac']);
             $table->dropIndex(['estatus']);
+            $table->dropSoftDeletes();
             $table->dropColumn(['mac', 'estatus']);
         });
     }

@@ -272,6 +272,9 @@ Cada dispositivo tiene **nombre**, **dirección MAC** y **estatus**:
 | Suspendido | No (bloqueo temporal) | Activo o Baja |
 | Baja | No, nunca (equipo retirado o robado) | — Es definitiva: si vuelve a usarse se da de alta otra vez |
 
+**Eliminar** (con cualquier estatus) lo quita de la lista de autorizados; también es definitivo. El registro queda
+oculto para la bitácora y para reconocer su llave: si ese dispositivo intenta operar, se bloquea y se anota.
+
 **Cómo se valida.** El navegador no puede leer la MAC del equipo, así que el acceso se valida en dos capas:
 
 1. **Código y cookie (siempre):** el dispositivo se vincula una vez con un código de un solo uso; queda una llave en
@@ -283,9 +286,10 @@ Cada dispositivo tiene **nombre**, **dirección MAC** y **estatus**:
    la red), o el celular muestra una MAC distinta a la registrada.
 
 La MAC se valida (12 dígitos hexadecimales; se aceptan `AA:BB:..`, `AA-BB-..`, `AABB.CCDD.EEFF`) y no se puede repetir
-entre dispositivos activos o suspendidos. Los intentos de uso con un dispositivo suspendido, dado de baja o con MAC
-distinta quedan en la **bitácora de dispositivos** (una vez cada 10 minutos por dispositivo), igual que las altas,
-ediciones, cambios de estatus y los intentos de entrar al apartado sin ser administrador.
+entre dispositivos activos o suspendidos (la de uno en Baja o eliminado se puede volver a registrar). Los intentos de
+uso con un dispositivo suspendido, dado de baja, eliminado o con MAC distinta quedan en la **bitácora de
+dispositivos** (una vez cada 10 minutos por dispositivo), igual que las altas, ediciones, cambios de estatus,
+eliminaciones y los intentos de entrar al apartado sin ser administrador.
 
 El apartado **Dispositivos autorizados** (menú del administrador) solo lo abre SYSDBA o un usuario con rol
 Administrador; el permiso se revisa en el servidor en cada acción, no solo en el menú.
@@ -297,7 +301,8 @@ Alta de dispositivos, con `true`:
 2. En ese dispositivo, entrar a la app y capturar el código (vale 24 horas y una sola vez). Queda vinculado con una
    cookie de 2 años; si se borran los datos del navegador, **Nuevo código** en el apartado y se captura otra vez.
 3. Los demás: **Dispositivos autorizados → Dar de alta** (nombre y MAC) y capturar el código en cada dispositivo.
-4. Para bloquearlo: **Suspender** (temporal) o **Dar de baja** (definitivo). Se bloquea en su siguiente clic.
+4. Para bloquearlo: **Suspender** (temporal), **Dar de baja** o **Eliminar** (definitivos). Se bloquea en su
+   siguiente clic.
 
 Al cambiar a `true` en el servidor: `php artisan config:clear` (o `config:cache`).
 
@@ -424,5 +429,5 @@ Mismos pasos 2 a 8. Además, antes del despliegue (S7):
 | `413` al subir fotos | Subir `maxAllowedContentLength` (web.config) y `post_max_size` juntos |
 | Acentos o Ñ raros | Revisar el charset que reporta `aa:firebird` y `DB_FIREBIRD_CHARSET` |
 | Todos caen en *Este dispositivo no está autorizado* | `AA_DISPOSITIVOS=true` sin dispositivos dados de alta: `php artisan aa:dispositivo-codigo "<nombre>" --mac=<MAC>` (sección 7) |
-| Un dispositivo autorizado vuelve a pedir código | Se borró la cookie del navegador: **Nuevo código**. Si dice suspendido o dado de baja, revisar su estatus |
+| Un dispositivo autorizado vuelve a pedir código | Se borró la cookie del navegador: **Nuevo código**. Si dice suspendido, dado de baja o eliminado, revisar su estatus |
 | "La llave de este navegador es de otro dispositivo" | La MAC vista en la red no es la registrada: corregir la MAC (en celulares, quitar la MAC privada) o `AA_DISPOSITIVOS_MAC=false` |

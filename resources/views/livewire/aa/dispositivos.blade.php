@@ -11,7 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
 /**
- * Dispositivos autorizados: alta (nombre + MAC), edición y estatus Activo / Suspendido / Baja.
+ * Dispositivos autorizados: alta (nombre + MAC), edición, estatus Activo / Suspendido / Baja y eliminar.
  * Solo el administrador (SYSDBA entra siempre como administrador). El permiso se revisa en boot(), que corre
  * en cada petición al componente: al abrir la pantalla y en cada acción, no solo en lo que se ve.
  */
@@ -65,7 +65,7 @@ new #[Title('Dispositivos autorizados')] class extends Component {
     #[Computed]
     public function eventos()
     {
-        return DispositivoEvento::query()->with(['dispositivo', 'user'])->latest('id')->limit(40)->get();
+        return DispositivoEvento::query()->with(['dispositivo' => fn ($q) => $q->withTrashed(), 'user'])->latest('id')->limit(40)->get();
     }
 
     public function nuevo(): void
@@ -102,8 +102,9 @@ new #[Title('Dispositivos autorizados')] class extends Component {
                 'required',
                 // Ya normalizada: si no quedó AA:BB:CC:DD:EE:FF es que no era una MAC.
                 'regex:/^([0-9A-F]{2}:){5}[0-9A-F]{2}$/',
-                // Única entre los dispositivos que pueden operar; una MAC en Baja se puede volver a dar de alta.
-                Rule::unique('dispositivos', 'mac')->where(fn ($q) => $q->where('estatus', '!=', EstatusDispositivo::Baja->value))->ignore($this->editando),
+                // Única entre los dispositivos que pueden operar; una MAC en Baja o eliminada se puede volver a dar de alta.
+                Rule::unique('dispositivos', 'mac')->where(fn ($q) => $q->where('estatus', '!=', EstatusDispositivo::Baja->value))
+                    ->withoutTrashed()->ignore($this->editando),
             ],
         ], [
             'mac.regex' => 'La MAC no es válida. Son 12 dígitos hexadecimales, por ejemplo AA:BB:CC:DD:EE:FF.',
@@ -149,12 +150,30 @@ new #[Title('Dispositivos autorizados')] class extends Component {
 
         $anterior = $d->estatus;
         $d->update(['estatus' => $nuevo] + ($nuevo === EstatusDispositivo::Baja
-            // Baja corta la llave y el código pendiente; el dispositivo no vuelve a operar.
-            ? ['revocado_at' => now(), 'token_hash' => null, 'codigo_hash' => null]
+            // Baja anula el código pendiente. La llave se conserva para reconocer al dispositivo, bloquearlo y anotarlo.
+            ? ['revocado_at' => now(), 'codigo_hash' => null]
             : []));
 
         DispositivoEvento::anotar($d, auth()->user(), 'Cambio de estatus: '.$anterior->label().' → '.$nuevo->label());
         $this->dispatch('toast', tipo: 'ok', mensaje: "{$d->nombre}: {$nuevo->label()}.");
+    }
+
+    /** Lo quita de la lista de autorizados, con cualquier estatus. Es definitivo; queda en la bitácora. */
+    public function eliminar(int $id): void
+    {
+        $d = Dispositivo::findOrFail($id);
+
+        $d->update(['revocado_at' => $d->revocado_at ?? now(), 'codigo_hash' => null]);
+        $d->delete();
+
+        DispositivoEvento::anotar($d, auth()->user(), 'Dispositivo eliminado',
+            'MAC '.($d->mac ?? 'sin registrar').', estaba '.mb_strtolower($d->estatus->label()));
+
+        if ($this->editando === $d->id) {
+            $this->nuevo();
+        }
+
+        $this->dispatch('toast', tipo: 'ok', mensaje: "{$d->nombre} eliminado de la lista.");
     }
 
     /** Código nuevo para volver a vincular un dispositivo activo (p. ej. se borró la cookie del navegador). */
@@ -284,6 +303,9 @@ new #[Title('Dispositivos autorizados')] class extends Component {
                                             {{ match ($s) { EstatusDispositivo::Activo => 'Reactivar', EstatusDispositivo::Suspendido => 'Suspender', EstatusDispositivo::Baja => 'Dar de baja' } }}
                                         </button>
                                     @endforeach
+                                    <button type="button" wire:click="eliminar({{ $d->id }})"
+                                            wire:confirm="¿Eliminar {{ $d->nombre }} de la lista de autorizados? Es definitivo: ya no podrá usar el sistema."
+                                            class="btn btn-secundario text-peligro">Eliminar</button>
                                 </div>
                             </td>
                         </tr>
@@ -304,7 +326,7 @@ new #[Title('Dispositivos autorizados')] class extends Component {
         <ul class="divide-y divide-linea">
             @forelse ($this->eventos as $e)
                 <li class="grid gap-0.5 px-5 py-3" wire:key="dev-{{ $e->id }}">
-                    <p class="font-semibold">{{ $e->accion }}@if ($e->dispositivo) · {{ $e->dispositivo->nombre }}@endif</p>
+                    <p class="font-semibold">{{ $e->accion }}@if ($e->dispositivo) · {{ $e->dispositivo->nombre }}{{ $e->dispositivo->trashed() ? ' (eliminado)' : '' }}@endif</p>
                     @if ($e->detalle)
                         <p class="text-[15px] text-tinta/80">{{ $e->detalle }}</p>
                     @endif

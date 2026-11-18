@@ -5,15 +5,19 @@ namespace App\Models;
 use App\Enums\EstatusDispositivo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 /**
  * Dispositivo autorizado (PC, tablet, celular). El administrador lo da de alta con su nombre y MAC y le genera
  * un código de un solo uso; al escribirlo en el dispositivo se guarda una llave en una cookie (aquí solo vive su
- * hash). Solo opera con estatus Activo; Suspendido se reactiva, Baja es definitiva.
+ * hash). Solo opera con estatus Activo; Suspendido se reactiva, Baja es definitiva. Eliminar lo quita de la lista
+ * (borrado lógico): no vuelve a operar, pero su llave se sigue reconociendo para bloquearla y anotarlo.
  */
 class Dispositivo extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'dispositivos';
 
     protected $guarded = [];
@@ -51,7 +55,7 @@ class Dispositivo extends Model
 
     public function operable(): bool
     {
-        return $this->estatus === EstatusDispositivo::Activo;
+        return $this->estatus === EstatusDispositivo::Activo && ! $this->trashed();
     }
 
     /** Si ya se activó en el dispositivo o espera su código. */
@@ -113,14 +117,38 @@ class Dispositivo extends Model
         return $token;
     }
 
-    /** El dispositivo de esa llave, con cualquier estatus (quien llama decide si opera). Null si la llave no existe. */
+    /** Mensaje para el dispositivo que no puede operar. */
+    public function avisoBloqueo(): string
+    {
+        return $this->trashed()
+            ? 'Este dispositivo fue eliminado de la lista de autorizados y ya no puede usar el sistema.'
+            : $this->estatus->avisoBloqueo();
+    }
+
+    /** Cómo se anota en la bitácora un intento de uso bloqueado. */
+    public function motivoBloqueo(): string
+    {
+        return 'Intento de uso con dispositivo '.($this->trashed() ? 'eliminado' : mb_strtolower($this->estatus->label()));
+    }
+
+    /** La MAC ya está en otro dispositivo que puede operar (activo o suspendido, sin eliminar). */
+    public static function macOcupada(string $mac, ?int $salvo = null): bool
+    {
+        return static::query()->where('mac', $mac)->where('estatus', '!=', EstatusDispositivo::Baja->value)
+            ->when($salvo, fn ($q) => $q->whereKeyNot($salvo))->exists();
+    }
+
+    /**
+     * El dispositivo de esa llave, con cualquier estatus e incluso eliminado (quien llama decide si opera).
+     * Null si la llave no existe.
+     */
     public static function porLlave(?string $token): ?self
     {
         if (! $token || strlen($token) !== 64) {
             return null;
         }
 
-        return static::query()->where('token_hash', hash('sha256', $token))->first();
+        return static::withTrashed()->where('token_hash', hash('sha256', $token))->first();
     }
 
     public function marcarUso(): void

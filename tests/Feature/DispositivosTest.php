@@ -126,11 +126,13 @@ it('la baja es definitiva: el dispositivo no opera, el intento se anota y no se 
     Volt::actingAs(usuario(Rol::Admin))->test('aa.dispositivos')->call('cambiarEstatus', $d->id, 'baja');
     $d->refresh();
     expect($d->estatus)->toBe(EstatusDispositivo::Baja)
-        ->and($d->token_hash)->toBeNull()
         ->and($d->revocado_at)->not->toBeNull();
 
-    // La llave ya no existe: cae en la pantalla de autorización sin entrar.
-    conLlave($this, $llave)->get(route('inicio'))->assertRedirect(route('dispositivo.mostrar'));
+    // La llave se sigue reconociendo: se bloquea con el motivo y queda anotado.
+    conLlave($this, $llave)->get(route('inicio'))
+        ->assertRedirect(route('dispositivo.mostrar'))
+        ->assertSessionHas('bloqueo', EstatusDispositivo::Baja->avisoBloqueo());
+    expect(accionesDe($d))->toContain('Intento de uso con dispositivo baja');
 
     Volt::actingAs(usuario(Rol::Admin))->test('aa.dispositivos')->call('cambiarEstatus', $d->id, 'activo')->assertForbidden();
     Volt::actingAs(usuario(Rol::Admin))->test('aa.dispositivos')->call('nuevoCodigo', $d->id)->assertForbidden();
@@ -148,6 +150,50 @@ it('un dispositivo dado de baja que todavía trae su llave se bloquea y se anota
         ->assertSessionHas('bloqueo', EstatusDispositivo::Baja->avisoBloqueo());
 
     expect(accionesDe($d))->toContain('Intento de uso con dispositivo baja');
+});
+
+it('eliminar lo quita de la lista; si intenta operar se bloquea y se anota; su MAC queda libre', function () {
+    [$d, $codigo] = altaDispositivo('Caja Centro', 'AA:BB:CC:00:00:01');
+    $llave = activarEquipo($this, $codigo);
+    $d->update(['estatus' => EstatusDispositivo::Suspendido]); // se elimina con cualquier estatus
+
+    $pantalla = Volt::actingAs(usuario(Rol::Admin))->test('aa.dispositivos')->call('eliminar', $d->id)->assertOk();
+
+    expect(Dispositivo::find($d->id))->toBeNull()
+        ->and(Dispositivo::withTrashed()->find($d->id)->trashed())->toBeTrue()
+        ->and($pantalla->get('dispositivos')->pluck('id')->all())->not->toContain($d->id)
+        ->and(DispositivoEvento::where('dispositivo_id', $d->id)->latest('id')->first()->only('accion', 'detalle'))->toBe([
+            'accion' => 'Dispositivo eliminado',
+            'detalle' => 'MAC AA:BB:CC:00:00:01, estaba suspendido',
+        ]);
+
+    // Ya no opera: se bloquea, se anota una sola vez aunque insista.
+    conLlave($this, $llave)->get(route('inicio'))
+        ->assertRedirect(route('dispositivo.mostrar'))
+        ->assertSessionHas('bloqueo', 'Este dispositivo fue eliminado de la lista de autorizados y ya no puede usar el sistema.');
+    conLlave($this, $llave)->get(route('inicio'))->assertRedirect(route('dispositivo.mostrar'));
+    expect(DispositivoEvento::where('dispositivo_id', $d->id)->where('accion', 'Intento de uso con dispositivo eliminado')->count())->toBe(1);
+
+    // No se puede editar, cambiar de estatus ni regenerar código, ni eliminar otra vez.
+    foreach ([['editar', $d->id], ['cambiarEstatus', $d->id, 'activo'], ['nuevoCodigo', $d->id], ['eliminar', $d->id]] as $llamada) {
+        Volt::actingAs(usuario(Rol::Admin))->test('aa.dispositivos')->call(...$llamada)->assertNotFound();
+    }
+
+    // La MAC se puede volver a registrar en un dispositivo nuevo.
+    Volt::actingAs(usuario(Rol::Admin))->test('aa.dispositivos')
+        ->set(['nombre' => 'Caja Centro (nueva)', 'mac' => 'AA:BB:CC:00:00:01'])->call('guardar')->assertHasNoErrors();
+    $this->artisan('aa:dispositivo-codigo', ['nombre' => 'Otra', '--mac' => 'AA:BB:CC:00:00:01'])->assertFailed();
+});
+
+it('eliminar también valida el rol en el servidor', function () {
+    [$d] = altaDispositivo();
+    $pantalla = Volt::actingAs(usuario(Rol::Admin))->test('aa.dispositivos');
+
+    $this->actingAs(usuario(Rol::Cedis));
+    $pantalla->call('eliminar', $d->id)->assertForbidden();
+
+    expect(Dispositivo::find($d->id))->not->toBeNull()
+        ->and(DispositivoEvento::where('accion', 'Acceso denegado a Dispositivos autorizados')->count())->toBe(1);
 });
 
 it('si el servidor ve en la red una MAC distinta a la registrada, bloquea; si no la ve, vale la cookie', function () {
