@@ -117,14 +117,15 @@ return [
         | Microsip / AdminExpertos. Funciona igual con Firebird 3, 4 o 5: solo cambia el servidor,
         | la app habla por fbclient.dll. DB_FIREBIRD_DATABASE acepta la ruta del .FDB en el servidor
         | (C:/Microsip datos/ACEROS EL AGUILA.FDB) o un alias de databases.conf. Nunca la de producción.
+        | Ruta, usuario y contraseña solo viven en el .env de cada equipo y del servidor.
         */
         'firebird' => [
             'driver' => 'firebird',
             'host' => env('DB_FIREBIRD_HOST', '127.0.0.1'),
             'port' => env('DB_FIREBIRD_PORT', '3050'),
-            'database' => env('DB_FIREBIRD_DATABASE', 'C:/Microsip datos/ACEROS EL AGUILA.FDB'),
-            'username' => env('DB_FIREBIRD_USERNAME', 'SYSDBA'),
-            'password' => env('DB_FIREBIRD_PASSWORD', 'masterkey'),
+            'database' => env('DB_FIREBIRD_DATABASE'),
+            'username' => env('DB_FIREBIRD_USERNAME'),
+            'password' => env('DB_FIREBIRD_PASSWORD'),
             'charset' => env('DB_FIREBIRD_CHARSET', 'UTF8'),
             'role' => env('DB_FIREBIRD_ROLE'),
             'prefix' => '',
@@ -138,9 +139,9 @@ return [
             'driver' => 'firebird',
             'host' => env('DB_FIREBIRD_HOST', '127.0.0.1'),
             'port' => env('DB_FIREBIRD_PORT', '3050'),
-            'database' => env('DB_FIREBIRD_CONFIG_DATABASE', 'C:/Microsip datos/System/CONFIG.FDB'),
-            'username' => env('DB_FIREBIRD_USERNAME', 'SYSDBA'),
-            'password' => env('DB_FIREBIRD_PASSWORD', 'masterkey'),
+            'database' => env('DB_FIREBIRD_CONFIG_DATABASE'),
+            'username' => env('DB_FIREBIRD_USERNAME'),
+            'password' => env('DB_FIREBIRD_PASSWORD'),
             'charset' => env('DB_FIREBIRD_CHARSET', 'UTF8'),
             'role' => env('DB_FIREBIRD_ROLE'),
             'prefix' => '',

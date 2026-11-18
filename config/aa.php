@@ -86,9 +86,12 @@ return [
     /*
     | Dispositivos autorizados. Apagado por defecto para no estorbar en el desarrollo;
     | en producción: AA_DISPOSITIVOS=true. El rol Consulta queda exento.
+    | validar_mac: además de la cookie, si el servidor ve la MAC del dispositivo en la red local (tabla ARP),
+    | debe coincidir con la registrada. Si no la ve (VPN, otra red), vale solo la cookie.
     */
     'dispositivos' => [
         'activo' => (bool) env('AA_DISPOSITIVOS', false),
+        'validar_mac' => (bool) env('AA_DISPOSITIVOS_MAC', true),
         'cookie' => 'aa_dispositivo',
         'codigo_vigencia_horas' => 24,
     ],

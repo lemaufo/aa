@@ -239,13 +239,90 @@ DB_USERNAME=<usuario>
 DB_PASSWORD=<contraseña>
 
 AA_ORIGEN=demo            # demo = datos de prueba; sin esta línea la app lee Microsip (firebird)
+AA_DISPOSITIVOS=false     # dispositivos autorizados: false en desarrollo, true en el servidor (ver abajo)
 
 DB_FIREBIRD_HOST=127.0.0.1
 DB_FIREBIRD_PORT=3050
 DB_FIREBIRD_DATABASE="C:/Microsip datos/ACEROS EL AGUILA.FDB"
+DB_FIREBIRD_CONFIG_DATABASE="C:/Microsip datos/System/CONFIG.FDB"
 DB_FIREBIRD_USERNAME=<usuario>
 DB_FIREBIRD_PASSWORD=<contraseña>
 DB_FIREBIRD_CHARSET=UTF8
+```
+
+Las conexiones de MySQL y de Firebird (rutas, usuario y contraseña) **solo** están en el `.env`: `config/database.php`
+ya no trae valores de respaldo para Firebird, así que sin estas líneas la app no se conecta a Microsip.
+
+### Dispositivos autorizados (`AA_DISPOSITIVOS`)
+
+Con `AA_DISPOSITIVOS=true` solo entran a la app los dispositivos dados de alta y **activos** (PC de caja, tablets,
+celulares de CEDIS). Uno nuevo, aunque el usuario tenga contraseña, ve la pantalla **Este dispositivo no está
+autorizado** y no pasa de ahí hasta capturar un código. El rol Consulta (rastreo por folio) queda exento.
+
+- **Servidor: siempre `true`.** Con `false` cualquier equipo de la red (o de fuera, si el sitio se publica) entra solo
+  con usuario y contraseña: una contraseña filtrada basta para operar pedidos, autorizar entregas y escribir en
+  Microsip. Suspender o dar de baja un dispositivo tampoco tiene efecto mientras esté en `false`.
+- **Desarrollo local: `false`**, para no pedir código en cada equipo de los desarrolladores.
+
+Cada dispositivo tiene **nombre**, **dirección MAC** y **estatus**:
+
+| Estatus | Opera | Se puede pasar a |
+|---|---|---|
+| Activo | Sí | Suspendido o Baja |
+| Suspendido | No (bloqueo temporal) | Activo o Baja |
+| Baja | No, nunca (equipo retirado o robado) | — Es definitiva: si vuelve a usarse se da de alta otra vez |
+
+**Cómo se valida.** El navegador no puede leer la MAC del equipo, así que el acceso se valida en dos capas:
+
+1. **Código y cookie (siempre):** el dispositivo se vincula una vez con un código de un solo uso; queda una llave en
+   una cookie del navegador y solo pasa si su dispositivo está Activo.
+2. **MAC en la red local (cuando se puede ver):** el servidor busca la IP del dispositivo en su tabla ARP. Si la ve y
+   no coincide con la registrada (p. ej. la cookie se copió a otro equipo), lo bloquea. Por VPN, desde otra red o con
+   IIS en otra subred no la ve y vale solo la cookie. `AA_DISPOSITIVOS_MAC=false` apaga esta capa.
+   En celulares hay que **desactivar la "MAC privada / aleatoria"** para la red Wi-Fi de la empresa (Ajustes → Wi-Fi →
+   la red), o el celular muestra una MAC distinta a la registrada.
+
+La MAC se valida (12 dígitos hexadecimales; se aceptan `AA:BB:..`, `AA-BB-..`, `AABB.CCDD.EEFF`) y no se puede repetir
+entre dispositivos activos o suspendidos. Los intentos de uso con un dispositivo suspendido, dado de baja o con MAC
+distinta quedan en la **bitácora de dispositivos** (una vez cada 10 minutos por dispositivo), igual que las altas,
+ediciones, cambios de estatus y los intentos de entrar al apartado sin ser administrador.
+
+El apartado **Dispositivos autorizados** (menú del administrador) solo lo abre SYSDBA o un usuario con rol
+Administrador; el permiso se revisa en el servidor en cada acción, no solo en el menú.
+
+Alta de dispositivos, con `true`:
+
+1. El **primero** (el del administrador) no puede entrar al apartado hasta estar autorizado, así que se da de alta
+   por consola en el servidor: `php artisan aa:dispositivo-codigo "PC Administración" --mac=AA:BB:CC:DD:EE:FF`.
+2. En ese dispositivo, entrar a la app y capturar el código (vale 24 horas y una sola vez). Queda vinculado con una
+   cookie de 2 años; si se borran los datos del navegador, **Nuevo código** en el apartado y se captura otra vez.
+3. Los demás: **Dispositivos autorizados → Dar de alta** (nombre y MAC) y capturar el código en cada dispositivo.
+4. Para bloquearlo: **Suspender** (temporal) o **Dar de baja** (definitivo). Se bloquea en su siguiente clic.
+
+Al cambiar a `true` en el servidor: `php artisan config:clear` (o `config:cache`).
+
+### Prueba de la entrega contra la copia (Firebird apagado y reintento)
+
+La única escritura de la app en Microsip es marcar la venta entregada (`LIBRES_VTA_PV.ENTREGADO = 'S'`). Las
+pruebas automáticas simulan Firebird (`tests/Feature/EscrituraMicrosipTest.php`); contra la **copia** se prueba así:
+
+1. Con `AA_ORIGEN=firebird` y el `.env` apuntando a la copia, llevar un pedido hasta *En CEDIS* con un ticket real
+   de la copia que no esté entregado. En IBExpert, `LIBRES_VTA_PV.ENTREGADO` de ese ticket debe estar en `N` o vacío.
+2. **Apagar Firebird** (PowerShell como administrador): `Stop-Service FirebirdServerDefaultInstance`
+   (el nombre exacto sale de `Get-Service *firebird*`).
+3. Entregar el pedido en CEDIS con el acuse. Esperado: el pedido queda **Entregado**, aparece el aviso de que la
+   venta no se actualizó, y la bitácora muestra *Error al actualizar Microsip* con el motivo (sin conexión).
+4. **Encender Firebird**: `Start-Service FirebirdServerDefaultInstance`.
+5. En el pedido, **Reintentar**. Esperado: *Reintento de actualización de venta* y *Venta actualizada en Microsip*
+   en la bitácora, y en IBExpert `ENTREGADO = 'S'`.
+6. Reintentar otra vez no debe ser posible (el botón desaparece); si se fuerza, la venta ya entregada no se vuelve
+   a escribir.
+
+La parte de escritura también tiene una prueba de integración que se corre a mano, con un ticket de la copia que no
+esté entregado (lo marca y lo regresa como estaba):
+
+```powershell
+$env:AA_PRUEBA_FIREBIRD_FOLIO="TBA074886"; php artisan test --group=firebird-real; Remove-Item Env:AA_PRUEBA_FIREBIRD_FOLIO
 ```
 
 Luego:
@@ -316,7 +393,9 @@ Mismos pasos 2 a 8. Además, antes del despliegue (S7):
 - Confirmar que el servidor alcanza el Firebird de Microsip: `Test-NetConnection <servidor Microsip> -Port 3050`
   (directo o por VPN) y `php artisan aa:firebird` con el usuario `AA_APP`.
 
-- `APP_ENV=production`, `APP_DEBUG=false`, `AA_DEMO=false`, `AA_DISPOSITIVOS=true`.
+- `APP_ENV=production`, `APP_DEBUG=false`, `AA_DEMO=false`, `AA_DISPOSITIVOS=true` (obligatorio; antes de
+  activarlo, dar de alta el primer dispositivo con `aa:dispositivo-codigo`, sección 7). Revisar con la red del
+  cliente si el IIS está en la misma subred que los dispositivos (validación por MAC) o si llegan por VPN.
 
 - Los seeders de prueba no corren en producción (se saltan solos). Se entra con los usuarios de Microsip: el
   primero es **SYSDBA** con su contraseña de Microsip (entra siempre como administrador) y en **Usuarios → Asignar
@@ -344,3 +423,6 @@ Mismos pasos 2 a 8. Además, antes del despliegue (S7):
 | `I/O error ... CreateFile (open)` | La ruta del `.env` no es la que ve el servidor Firebird, o se usa un alias inexistente |
 | `413` al subir fotos | Subir `maxAllowedContentLength` (web.config) y `post_max_size` juntos |
 | Acentos o Ñ raros | Revisar el charset que reporta `aa:firebird` y `DB_FIREBIRD_CHARSET` |
+| Todos caen en *Este dispositivo no está autorizado* | `AA_DISPOSITIVOS=true` sin dispositivos dados de alta: `php artisan aa:dispositivo-codigo "<nombre>" --mac=<MAC>` (sección 7) |
+| Un dispositivo autorizado vuelve a pedir código | Se borró la cookie del navegador: **Nuevo código**. Si dice suspendido o dado de baja, revisar su estatus |
+| "La llave de este navegador es de otro dispositivo" | La MAC vista en la red no es la registrada: corregir la MAC (en celulares, quitar la MAC privada) o `AA_DISPOSITIVOS_MAC=false` |
