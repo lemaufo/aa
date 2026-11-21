@@ -92,6 +92,10 @@ return [
     'dispositivos' => [
         'activo' => (bool) env('AA_DISPOSITIVOS', false),
         'validar_mac' => (bool) env('AA_DISPOSITIVOS_MAC', true),
+        // Código de un solo uso para que SYSDBA autorice la primera máquina sin consola. Como los demás códigos:
+        // XXXX-XXXX (mínimo 8 caracteres sin contar guiones);
+        // vacío = apagado. Solo en el .env del servidor.
+        'codigo_inicial' => env('AA_DISPOSITIVOS_CODIGO_INICIAL'),
         'cookie' => 'aa_dispositivo',
         'codigo_vigencia_horas' => 24,
     ],

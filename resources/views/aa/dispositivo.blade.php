@@ -17,11 +17,14 @@
             @endif
 
             <p class="mt-2 text-acero">Pide al administrador un código de un solo uso y escríbelo aquí. Solo se hace una vez por dispositivo.</p>
+            @if (auth()->user()?->esSysdba() && \App\Support\CodigoInicial::configurado() && ! \App\Support\CodigoInicial::usado())
+                <p class="mt-2 text-acero">SYSDBA: si es la primera máquina, escribe el <b class="text-tinta">código inicial</b> que se configuró en el servidor.</p>
+            @endif
 
             <form method="POST" action="{{ route('dispositivo.activar') }}" class="mt-6 grid gap-4">
                 @csrf
                 <x-aa.campo label="Código del dispositivo" for="codigo" :error="$errors->first('codigo')">
-                    <input id="codigo" name="codigo" type="text" class="input font-display text-2xl font-semibold uppercase" placeholder="AB12-CD34"
+                    <input id="codigo" name="codigo" type="text" class="input font-display text-2xl font-semibold uppercase" placeholder="AB12-CD34" maxlength="64"
                            autocomplete="off" autocapitalize="characters" spellcheck="false" required autofocus>
                 </x-aa.campo>
                 <button type="submit" class="btn btn-primario w-full">Autorizar dispositivo</button>

@@ -296,10 +296,18 @@ Administrador; el permiso se revisa en el servidor en cada acción, no solo en e
 
 Alta de dispositivos, con `true`:
 
-1. El **primero** (el del administrador) no puede entrar al apartado hasta estar autorizado, así que se da de alta
-   por consola en el servidor: `php artisan aa:dispositivo-codigo "PC Administración" --mac=AA:BB:CC:DD:EE:FF`.
-2. En ese dispositivo, entrar a la app y capturar el código (vale 24 horas y una sola vez). Queda vinculado con una
-   cookie de 2 años; si se borran los datos del navegador, **Nuevo código** en el apartado y se captura otra vez.
+1. El **primero** es la máquina de **SYSDBA**, con el **código inicial** (sin consola):
+   - En el `.env` del servidor: `AA_DISPOSITIVOS_CODIGO_INICIAL=` con un código inventado igual a los demás:
+     **XXXX-XXXX**, 8 letras y números (p. ej. `K7Q2-M9XA`), y `php artisan config:clear` (sin consola: borrar
+     `bootstrap/cache/config.php` si existe).
+   - En esa máquina, entrar como **SYSDBA** y escribir el código en *Este dispositivo no está autorizado*. Se crea
+     **PC Administración (SYSDBA)** ya vinculada. La MAC se llena sola si el servidor la ve; si no, se captura con
+     **Editar**.
+   - **Solo SYSDBA** puede usarlo (otro usuario se rechaza y queda en la bitácora) y **sirve una sola vez**. Si SYSDBA
+     cambia de máquina y no hay otro administrador autorizado, se pone un código **distinto** en el `.env`.
+   - Respaldo por consola: `php artisan aa:dispositivo-codigo "PC Administración" --mac=AA:BB:CC:DD:EE:FF`.
+2. Los códigos de los demás valen 24 horas y una sola vez. El dispositivo queda vinculado con una cookie de 2 años;
+   si se borran los datos del navegador, **Nuevo código** en el apartado y se captura otra vez.
 3. Los demás: **Dispositivos autorizados → Dar de alta** (nombre y MAC) y capturar el código en cada dispositivo.
 4. Para bloquearlo: **Suspender** (temporal), **Dar de baja** o **Eliminar** (definitivos). Se bloquea en su
    siguiente clic.
@@ -399,7 +407,7 @@ Mismos pasos 2 a 8. Además, antes del despliegue (S7):
   (directo o por VPN) y `php artisan aa:firebird` con el usuario `AA_APP`.
 
 - `APP_ENV=production`, `APP_DEBUG=false`, `AA_DEMO=false`, `AA_DISPOSITIVOS=true` (obligatorio; antes de
-  activarlo, dar de alta el primer dispositivo con `aa:dispositivo-codigo`, sección 7). Revisar con la red del
+  activarlo, autorizar la máquina de SYSDBA con el código inicial, sección 7). Revisar con la red del
   cliente si el IIS está en la misma subred que los dispositivos (validación por MAC) o si llegan por VPN.
 
 - Los seeders de prueba no corren en producción (se saltan solos). Se entra con los usuarios de Microsip: el
@@ -428,6 +436,6 @@ Mismos pasos 2 a 8. Además, antes del despliegue (S7):
 | `I/O error ... CreateFile (open)` | La ruta del `.env` no es la que ve el servidor Firebird, o se usa un alias inexistente |
 | `413` al subir fotos | Subir `maxAllowedContentLength` (web.config) y `post_max_size` juntos |
 | Acentos o Ñ raros | Revisar el charset que reporta `aa:firebird` y `DB_FIREBIRD_CHARSET` |
-| Todos caen en *Este dispositivo no está autorizado* | `AA_DISPOSITIVOS=true` sin dispositivos dados de alta: `php artisan aa:dispositivo-codigo "<nombre>" --mac=<MAC>` (sección 7) |
+| Todos caen en *Este dispositivo no está autorizado* | `AA_DISPOSITIVOS=true` sin dispositivos dados de alta: SYSDBA entra con el código inicial (`AA_DISPOSITIVOS_CODIGO_INICIAL`) o `php artisan aa:dispositivo-codigo "<nombre>" --mac=<MAC>` (sección 7) |
 | Un dispositivo autorizado vuelve a pedir código | Se borró la cookie del navegador: **Nuevo código**. Si dice suspendido, dado de baja o eliminado, revisar su estatus |
 | "La llave de este navegador es de otro dispositivo" | La MAC vista en la red no es la registrada: corregir la MAC (en celulares, quitar la MAC privada) o `AA_DISPOSITIVOS_MAC=false` |

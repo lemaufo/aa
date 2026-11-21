@@ -309,3 +309,78 @@ it('lee la MAC de la tabla ARP del servidor solo para IPs de la red local', func
 
     Process::assertRanTimes(fn ($p) => in_array('192.168.1.25', (array) $p->command, true), 1);
 });
+
+// Código inicial: SYSDBA autoriza la primera máquina sin consola.
+
+function sysdba(): User
+{
+    return User::where('username', 'sysdba')->first()
+        ?? tap(usuario(Rol::Admin), fn (User $u) => $u->forceFill(['username' => 'sysdba', 'name' => 'SYSDBA'])->save());
+}
+
+function canjearCodigo($test, User $usuario, string $codigo)
+{
+    return $test->actingAs($usuario)->post(route('dispositivo.activar'), ['codigo' => $codigo]);
+}
+
+it('SYSDBA autoriza la primera máquina con el código inicial, y ese código sirve una sola vez', function () {
+    config(['aa.dispositivos.codigo_inicial' => 'k7q2-m9xa']);
+    macEnLaRed('AA:BB:CC:00:00:AA');
+    $sysdba = sysdba();
+
+    $respuesta = canjearCodigo($this, $sysdba, ' K7Q2M9XA ')->assertRedirect(route('inicio'));
+    $llave = $respuesta->getCookie(config('aa.dispositivos.cookie'))->getValue();
+
+    $d = Dispositivo::sole();
+    expect($d->nombre)->toBe('PC Administración (SYSDBA)')
+        ->and($d->mac)->toBe('AA:BB:CC:00:00:AA')
+        ->and($d->operable())->toBeTrue()
+        ->and($d->conexion())->toBe('Vinculado')
+        ->and($d->codigo_inicial_hash)->toBe(hash('sha256', 'K7Q2M9XA'))
+        ->and(accionesDe($d))->toBe(['Primer dispositivo autorizado con el código inicial']);
+
+    // Con esa llave ya entra, también al apartado de dispositivos.
+    conLlave($this, $llave, $sysdba)->get(route('inicio'))->assertOk();
+    conLlave($this, $llave, $sysdba)->get(route('dispositivos'))->assertOk();
+
+    // Otra vez (otro navegador): ya se usó.
+    canjearCodigo($this, $sysdba, 'K7Q2-M9XA')->assertSessionHasErrors(['codigo' => 'El código inicial ya se usó. Para autorizar otra máquina, pon uno nuevo en el .env del servidor o pide un código al administrador.']);
+    expect(Dispositivo::count())->toBe(1);
+
+    // Ni eliminando el dispositivo vuelve a servir; con un código distinto en el .env, sí.
+    $d->delete();
+    canjearCodigo($this, $sysdba, 'K7Q2-M9XA')->assertSessionHasErrors('codigo');
+    config(['aa.dispositivos.codigo_inicial' => 'NUEV-2026']);
+    canjearCodigo($this, $sysdba, 'nuev-2026')->assertRedirect(route('inicio'));
+    expect(Dispositivo::count())->toBe(1)
+        ->and(Dispositivo::withTrashed()->count())->toBe(2);
+});
+
+it('el código inicial es solo para SYSDBA: otro usuario, aunque sea administrador, se rechaza y se anota', function () {
+    config(['aa.dispositivos.codigo_inicial' => 'K7Q2-M9XA']);
+
+    foreach ([usuario(Rol::Admin), usuario(Rol::Cajero)] as $otro) {
+        canjearCodigo($this, $otro, 'K7Q2-M9XA')->assertSessionHasErrors(['codigo' => 'Este código solo lo puede usar SYSDBA.']);
+    }
+
+    expect(Dispositivo::count())->toBe(0)
+        ->and(DispositivoEvento::where('accion', 'Código inicial rechazado')->count())->toBe(2);
+
+    // Sigue disponible para SYSDBA.
+    canjearCodigo($this, sysdba(), 'K7Q2-M9XA')->assertRedirect(route('inicio'));
+});
+
+it('el código inicial está apagado si viene vacío o tiene menos de 8 caracteres; la MAC se deja vacía si no se ve o ya está ocupada', function () {
+    foreach ([null, '', 'CORT-123'] as $valor) {
+        config(['aa.dispositivos.codigo_inicial' => $valor]);
+        canjearCodigo($this, sysdba(), (string) ($valor ?: 'X'))->assertSessionHasErrors('codigo');
+    }
+    expect(Dispositivo::count())->toBe(0);
+
+    altaDispositivo('Caja Centro', 'AA:BB:CC:00:00:01');
+    macEnLaRed('AA:BB:CC:00:00:01');
+    config(['aa.dispositivos.codigo_inicial' => 'K7Q2-M9XA']);
+    canjearCodigo($this, sysdba(), 'K7Q2-M9XA')->assertRedirect(route('inicio'));
+
+    expect(Dispositivo::where('nombre', 'PC Administración (SYSDBA)')->value('mac'))->toBeNull();
+});
